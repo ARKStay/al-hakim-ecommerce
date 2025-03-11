@@ -1,5 +1,6 @@
 <x-dashboard.layout>
     <x-slot:title>Shipped Orders</x-slot:title>
+
     @if (session('success'))
         <script>
             document.addEventListener('DOMContentLoaded', function() {
@@ -18,7 +19,7 @@
 
     <script>
         function confirmDelete(event, formId) {
-            event.preventDefault(); // Mencegah form terkirim secara langsung
+            event.preventDefault();
             Swal.fire({
                 title: 'Are you sure?',
                 text: "Do you want to delete this order?",
@@ -30,7 +31,7 @@
                 cancelButtonText: 'No, cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    document.getElementById(formId).submit(); // Kirim form jika pengguna menekan "Yes"
+                    document.getElementById(formId).submit();
                 }
             });
         }
@@ -38,7 +39,6 @@
 
     <div class="px-4 mx-auto max-w-screen-2xl lg:px-12">
         <div class="relative overflow-hidden bg-white shadow-md sm:rounded-lg">
-            <!-- Search Form -->
             <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
                 <div class="w-full md:w-1/2">
                     <form method="GET" action="{{ route('dashboard.shippeds.index') }}" id="search-form"
@@ -59,7 +59,6 @@
                     </form>
                 </div>
 
-                <!-- Dropdown untuk Status -->
                 <div class="w-full md:w-1/4 ml-auto">
                     <form method="GET" action="{{ route('dashboard.shippeds.index') }}" id="status-form">
                         <div>
@@ -67,8 +66,8 @@
                                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 p-2 w-full">
                                 <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>All Status
                                 </option>
-                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>
-                                    Pending</option>
+                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending
+                                </option>
                                 <option value="complete" {{ request('status') == 'complete' ? 'selected' : '' }}>
                                     Complete</option>
                             </select>
@@ -77,14 +76,14 @@
                 </div>
             </div>
 
-            <!-- Table -->
             <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left text-gray-500 >
+                <table class="w-full text-sm text-left text-gray-500">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                         <tr>
                             <th scope="col" class="px-4 py-3">No.</th>
                             <th scope="col" class="px-4 py-3">Order Number</th>
                             <th scope="col" class="px-4 py-3">User Name</th>
+                            <th scope="col" class="px-4 py-3">Products</th>
                             <th scope="col" class="px-4 py-3">Shipping Method</th>
                             <th scope="col" class="px-4 py-3">Order Status</th>
                             <th scope="col" class="px-4 py-3">Action</th>
@@ -97,7 +96,28 @@
                                     <td class="px-4 py-3 text-gray-900 font-medium">{{ $loop->iteration }}</td>
                                     <td class="px-4 py-3 text-gray-900 font-medium">{{ $order->cart_id }}</td>
                                     <td class="px-4 py-3 text-gray-900 font-medium">{{ $order->user->name }}</td>
-                                    <td class="px-4 py-3 text-gray-900 font-medium">{{ $order->shipping_method ?? 'N/A' }}</td>
+                                    <td class="px-4 py-3 text-gray-900 font-medium">
+                                        <div class="p-2 rounded-lg bg-gray-50">
+                                            @foreach ($order->items as $item)
+                                                <div class="flex justify-between items-center py-1">
+                                                    <div class="flex flex-col">
+                                                        <span
+                                                            class="font-medium text-gray-900">{{ $item->product->name }}</span>
+                                                        <span class="text-sm text-gray-500">
+                                                            {{ $item->quantity }} pcs •
+                                                            {{ $item->color ?? 'N/A' }} •
+                                                            {{ $item->sizes->name ?? 'N/A' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                @unless ($loop->last)
+                                                    <hr class="border-gray-200 my-1">
+                                                @endunless
+                                            @endforeach
+                                        </div>
+                                    </td>
+                                    <td class="px-4 py-3 text-gray-900 font-medium">
+                                        {{ $order->shipping_method ?? 'N/A' }}</td>
                                     <td class="px-4 py-3 font-medium">
                                         @if ($order->order_status === 'pending')
                                             <span class="text-yellow-500">Pending</span>
@@ -107,7 +127,7 @@
                                             <span class="text-gray-500">Unknown</span>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3">
+                                    <td class="px-4 py-3 whitespace-nowrap">
                                         @if ($order->order_status === 'pending')
                                             <form action="{{ route('dashboard.shippeds.complete', $order->id) }}"
                                                 method="POST">

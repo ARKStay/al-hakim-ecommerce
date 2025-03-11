@@ -33,7 +33,9 @@ class DashboardPaymentsController extends Controller
         }
 
         // Ambil data pesanan yang sudah difilter
-        $orders = $query->get();
+        $orders = $query->select('id', 'cart_id', 'user_id', 'image', 'total_price', 'shipping_cost', 'payment_status', 'created_at', 'updated_at')
+            ->with('user')
+            ->get();
 
         // Mengirimkan data pesanan ke tampilan
         return view('dashboard.payments.index', compact('orders'));

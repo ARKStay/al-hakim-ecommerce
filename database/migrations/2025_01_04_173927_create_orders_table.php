@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('cart_id')->constrained()->onDelete('cascade');
             $table->integer('total_price');
             $table->string('shipping_method');
+            $table->integer('shipping_cost')->default(0);
             $table->string('image')->nullable();
             $table->string('payment_status')->default('pending');
             $table->string('order_status')->default('pending');

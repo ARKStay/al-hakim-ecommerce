@@ -14,7 +14,7 @@ class UserOrdersController extends Controller
     public function index()
     {
         // Ambil semua pesanan user yang sedang login dengan eager loading
-        $orders = Order::with('cart.items.product') // Eager load relasi dengan cart, items, dan product
+        $orders = Order::with('orderItems.product') // Eager load relasi dengan cart, items, dan product
             ->where('user_id', Auth::id()) // Filter berdasarkan user yang sedang login
             ->orderBy('created_at', 'desc') // Urutkan pesanan berdasarkan tanggal dibuat, terbaru di atas
             ->get();

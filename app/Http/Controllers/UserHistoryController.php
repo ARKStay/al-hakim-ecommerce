@@ -14,9 +14,9 @@ class UserHistoryController extends Controller
      */
     public function index()
     {
-        // Ambil semua pesanan user yang sedang login dengan relasi terkait
-        $orders = Order::with('cart.items.product') // Eager loading
+        $orders = Order::with(['orderItems.product', 'ratings']) // Tambahkan 'ratings'
             ->where('user_id', Auth::id())
+            ->where('order_status', 'complete')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -39,45 +39,19 @@ class UserHistoryController extends Controller
         ]);
 
         // Ambil data order berdasarkan ID
-        $order = Order::findOrFail($validated['order_id']);
+        $order = Order::with('orderItems.product')->findOrFail($validated['order_id']);
 
         // Pastikan order milik user yang sedang login
         if ($order->user_id !== Auth::id()) {
             return redirect()->back()->with('error', 'Unauthorized action.');
         }
 
-        // Ambil item produk dari order
-        $product = $order->cart->items->first()->product;
+        // Loop semua produk dalam order dan kasih rating
+        foreach ($order->orderItems as $item) {
+            $product = $item->product;
 
-        // Cek apakah produk sudah pernah diberi rating oleh user
-        $existingRating = Rating::where('user_id', Auth::id())
-            ->where('product_id', $product->id)
-            ->first();
-
-        // Jika sudah ada rating, pastikan produk dibeli lagi
-        if ($existingRating) {
-            // Cek jika user membeli produk ini ulang
-            $lastPurchase = Order::where('user_id', Auth::id())
-                ->where('order_status', 'complete')
-                ->whereHas('cart.items', function ($query) use ($product) {
-                    $query->where('product_id', $product->id);
-                })
-                ->latest('created_at')
-                ->first();
-            if ($lastPurchase && $lastPurchase->created_at > $existingRating->created_at) {
-                // Jika produk dibeli ulang, izinkan memberikan rating
-                $rating = Rating::create([
-                    'user_id' => Auth::id(),
-                    'product_id' => $product->id,
-                    'rating' => $validated['rating'],
-                    'comment' => $validated['comment'],
-                ]);
-            } else {
-                return redirect()->back()->with('error', 'You must purchase the product again to rate it.');
-            }
-        } else {
-            // Jika produk belum dirating, langsung beri rating
-            $rating = Rating::create([
+            // Simpan rating untuk setiap produk di dalam order
+            Rating::create([
                 'user_id' => Auth::id(),
                 'product_id' => $product->id,
                 'rating' => $validated['rating'],
@@ -85,8 +59,10 @@ class UserHistoryController extends Controller
             ]);
         }
 
-        // Update rata-rata rating produk
-        $product->updateRatings();
+        // Update rating produk setelah semua rating disimpan
+        foreach ($order->orderItems as $item) {
+            $item->product->updateRatings();
+        }
 
         return redirect()->back()->with('success', 'Thank you for your feedback!');
     }

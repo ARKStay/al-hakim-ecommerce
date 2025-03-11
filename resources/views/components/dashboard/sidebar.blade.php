@@ -72,6 +72,9 @@
                 </x-dashboard.side-link>
             </li>
             <li>
+                <x-dashboard.side-link href="/dashboard/ratings" :active="request()->is('dashboard/ratings')">Ratings</x-dashboard.side-link>
+            </li>
+            <li>
                 <x-dashboard.side-link href="/dashboard/users" :active="request()->is('dashboard/users')">Users</x-dashboard.side-link>
             </li>
         </ul>

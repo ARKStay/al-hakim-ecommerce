@@ -36,7 +36,8 @@
                                 <td class="p-4">{{ $index + 1 }}.</td>
                                 <td class="p-4 flex items-center space-x-4">
                                     <!-- Product Image -->
-                                    <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                                    <div
+                                        class="w-16 h-16 bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                                         <img src="{{ asset('storage/' . $cart_item->product->image) }}"
                                             alt="{{ $cart_item->product->name }}" class="w-full h-full object-cover">
                                     </div>
@@ -82,19 +83,22 @@
                         class="px-4 py-3 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">Continue
                         Shopping</a>
                     <a href="{{ url('confirm_check_out') }}"
-                        class="px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Proceed to
+                        class="px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Proceed
+                        to
                         Checkout</a>
                 </div>
             @else
                 <!-- Display message when cart is empty -->
-                <div class="text-center mt-20">
-                    <p class="text-gray-500 dark:text-gray-400">Your cart is empty.</p>
+                <div class="flex flex-col items-center justify-center mt-24 mb-24 space-y-4">
+                    <p class="text-lg text-gray-600 dark:text-gray-400">Your cart is empty. Let's fill it up!</p>
                 </div>
+
                 <!-- Only show Continue Shopping button when cart is empty -->
-                <div class="mt-8 flex justify-between">
+                <div class="mt-8 flex justify-center">
                     <a href="/user/products"
-                        class="px-4 py-3 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">Continue
-                        Shopping</a>
+                        class="px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-md transition duration-300">
+                        Continue Shopping
+                    </a>
                 </div>
             @endif
         </div>

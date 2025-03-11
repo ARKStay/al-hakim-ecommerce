@@ -57,7 +57,7 @@
         <!-- Product Grid -->
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             @forelse ($products as $product)
-                <div class="relative rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+                <div class="relative flex flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm h-full">
                     <!-- Category Tag -->
                     <p
                         class="absolute -top-2 -left-2 z-10 inline-block rounded-lg bg-blue-500 px-3 py-1 text-xs font-medium text-white shadow-lg hover:bg-blue-600">
@@ -75,27 +75,39 @@
                             @endif
                         </a>
                     </div>
-                    <div class="pt-6">
+                    <div class="pt-6 flex-grow">
                         <a href="{{ route('user.products.detail', $product->slug) }}"
-                            class="text-lg font-semibold leading-tight text-gray-900 hover:underline">
-                            {{ $product->name }}
+                            class="block text-lg font-semibold leading-tight text-gray-900 hover:underline truncate"
+                            style="max-width: 100%;" title="{{ $product->name }}">
+                            {{ Str::limit($product->name, 30, '...') }}
                         </a>
-                        <div class="mt-2 text-sm text-gray-500">
+
+                        <!-- Grid untuk info biar sejajar -->
+                        <div class="mt-2 grid grid-cols-1 gap-1 text-sm text-gray-500">
                             <p><span class="font-medium text-gray-700">Color:</span>
-                                {{ $product->color ?? 'No Color' }}
-                            </p>
+                                {{ $product->color ?? 'No Color' }}</p>
+                            <p><span class="font-medium text-gray-700">Stock:</span>
+                                {{ $product->stock > 0 ? $product->stock : 'Out of stock' }}</p>
+                            <p><span class="font-medium text-gray-700">Ratings:</span> ⭐
+                                {{ number_format($product->average_rating, 1) }} ({{ $product->total_ratings }}
+                                reviews)</p>
                         </div>
-                        <div class="mt-2 flex items-center justify-between">
+
+                        <!-- Harga & Ukuran sejajar -->
+                        <div class="mt-4 flex items-center justify-between">
                             <p class="text-2xl font-extrabold text-gray-900">
-                                Rp{{ number_format($product->price, 0, ',', '.') }}</p>
+                                Rp{{ number_format($product->price, 0, ',', '.') }}
+                            </p>
                             <p class="text-sm text-gray-500">Size: {{ $product->sizes->name ?? '-' }}</p>
                         </div>
-                        <div class="mt-4">
-                            <a href="{{ route('user.products.detail', $product->slug) }}"
-                                class="inline-flex items-center bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700">
-                                View Product
-                            </a>
-                        </div>
+                    </div>
+
+                    <!-- Button tetap di bawah -->
+                    <div class="mt-auto pt-4">
+                        <a href="{{ route('user.products.detail', $product->slug) }}"
+                            class="inline-flex items-center justify-center bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 w-full">
+                            View Product
+                        </a>
                     </div>
                 </div>
             @empty
@@ -104,7 +116,6 @@
                 </div>
             @endforelse
         </div>
-
 
     </div>
 </x-layouts.layout>

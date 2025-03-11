@@ -25,7 +25,7 @@
                 Swal.fire({
                     icon: 'info',
                     title: 'Heads up!',
-                    text: "{{ session('info1') }}",
+                    text: "{{ session('info') }}",
                     showConfirmButton: true,
                     position: 'mid'
                 });
@@ -38,7 +38,7 @@
         <div class="mb-4">
             <a href="/user"
                 class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 border border-gray-300 rounded-lg hover:bg-gray-300 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">
-                ← Back to Dashboard
+                ← Back to Home
             </a>
         </div>
 
@@ -67,11 +67,11 @@
                     </tr>
                     <tr class="border-b dark:border-gray-700">
                         <th class="px-4 py-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-300">Phone Number</th>
-                        <td class="px-4 py-2">{{ auth()->user()->phone ?? 'Not provided' }}</td>
+                        <td class="px-4 py-2">{{ auth()->user()->phone ?? '-' }}</td>
                     </tr>
                     <tr>
                         <th class="px-4 py-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-300">Address</th>
-                        <td class="px-4 py-2">{{ auth()->user()->address ?? 'Not provided' }}</td>
+                        <td class="px-4 py-2">{{ auth()->user()->address ?? '-' }}</td>
                     </tr>
                 </tbody>
             </table>

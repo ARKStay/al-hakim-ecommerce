@@ -4,15 +4,14 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\IndexController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\ProductController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserIndexController;
-use App\Http\Controllers\UserOrderController;
 use App\Http\Controllers\UserOrdersController;
 use App\Http\Controllers\UserHistoryController;
 use App\Http\Controllers\UserProductController;
 use App\Http\Controllers\UserProfileController;
+use App\Http\Controllers\DashboardRatingsController;
 use App\Http\Controllers\DashboardSizesController;
 use App\Http\Controllers\DashboardUsersController;
 use App\Http\Controllers\DashboardBannersController;
@@ -30,12 +29,12 @@ Route::middleware('guest')->group(function () {
     Route::get('/products/{slug}', [IndexController::class, 'product_detail'])->name('products.detail');
 
     // Menampilkan daftar produk
-    Route::get('/products', [ProductController::class, 'index']);
+    Route::get('/products', [IndexController::class, 'products']);
 
     // Menampilkan halaman login dan menangani proses login
     Route::get('/login', [LoginController::class, 'index'])->name('login');
     Route::post('/login', [LoginController::class, 'authenticate']);
-    
+
     // Menampilkan halaman register dan menangani proses pendaftaran
     Route::get('/register', [RegisterController::class, 'index'])->name('register');
     Route::post('/register', [RegisterController::class, 'store']);
@@ -48,10 +47,10 @@ Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth');
 Route::middleware(['auth', 'admin'])->group(function () {
     // Menampilkan dashboard admin
     Route::get('/dashboard', [DashboardController::class, 'index']);
-    
+
     // Mengecek slug produk sebelum disimpan
     Route::get('/dashboard/products/checkSlug', [DashboardProductsController::class, 'checkSlug']);
-    
+
     // Menangani CRUD produk, pengguna, kategori, ukuran, dan banner di dashboard
     Route::resource('/dashboard/products', DashboardProductsController::class);
     Route::resource('/dashboard/users', DashboardUsersController::class);
@@ -69,24 +68,27 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard/shippeds', [DashboardShippedsController::class, 'index'])->name('dashboard.shippeds.index');
     Route::patch('/dashboard/shippeds/{id}/complete', [DashboardShippedsController::class, 'complete'])->name('dashboard.shippeds.complete');
     Route::delete('/dashboard/shippeds/{id}', [DashboardShippedsController::class, 'delete'])->name('dashboard.shippeds.delete');
+
+    // Route untuk manajemen rating di dashboard admin
+    Route::resource('/dashboard/ratings', DashboardRatingsController::class)->only(['index', 'destroy']);
 });
 
 // Rute untuk pengguna yang sudah login dengan akses user
 Route::middleware(['auth', 'user'])->group(function () {
     // Menampilkan halaman utama pengguna
     Route::get('/user', [UserIndexController::class, 'index'])->name('user.index');
-    
+
     // Menampilkan detail produk berdasarkan slug untuk pengguna
     Route::get('user/products/{slug}', [UserIndexController::class, 'detail'])->name('user.products.detail');
-    
+
     // Menampilkan daftar produk untuk pengguna
-    Route::get('user/products', [UserProductController::class, 'index']);
-    
+    Route::get('user/products', [UserProductController::class, 'index'])->name('user.products');
+
     // Menangani profil pengguna
     Route::resource('user/profile', UserProfileController::class)->parameters([
         'profile' => 'user',
     ]);
-    
+
     // Menampilkan dan menangani pesanan pengguna
     Route::get('/user/orders', [UserOrdersController::class, 'index'])->name('user.order');
 

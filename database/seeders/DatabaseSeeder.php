@@ -34,12 +34,6 @@ class DatabaseSeeder extends Seeder
             'role' => 'user',
         ]);
 
-        Banner::factory()->create([
-            'image' => 'product-banners/riJHpzTT65hor21PqNijCnPcAfomGjUNcaxUG2JL.png',
-            'status' => 'on',
-        ]);
-
-
         $this->call([CategorySeeder::class, SizesSeeder::class]);
         Product::factory(10)->recycle([
             Category::all(),

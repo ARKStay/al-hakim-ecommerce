@@ -22,8 +22,8 @@ return new class extends Migration
             $table->unsignedInteger('stock');
             $table->foreignId('category_id')->nullable()->constrained('categories')->nullOnDelete();
             $table->foreignId('sizes_id')->nullable()->constrained('sizes')->nullOnDelete();
-            $table->decimal('average_rating', 3, 2)->default(0); // Rata-rata rating
-            $table->unsignedBigInteger('total_ratings')->default(0); // Jumlah total rating
+            $table->decimal('average_rating', 3, 2)->default(0);
+            $table->unsignedBigInteger('total_ratings')->default(0);
             $table->timestamps();
         });
     }

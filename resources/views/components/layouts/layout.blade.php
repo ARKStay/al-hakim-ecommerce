@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-    <link rel="icon" href="{{ asset('storage/banks/favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('storage/banks/favicon123.ico') }}" type="image/x-icon">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <!-- Font Awesome untuk ikon -->
@@ -20,6 +20,7 @@
     <script src="https://unpkg.com/flowbite@1.5.5/dist/flowbite.min.js"></script>
 
     <title>Al Hakim Store</title>
+    </style>
 </head>
 
 <body class="h-full">

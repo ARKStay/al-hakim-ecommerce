@@ -108,13 +108,15 @@
                     <label for="shipping" class="block text-sm font-medium text-gray-700 dark:text-gray-400 mb-2">
                         Choose shipping method:</label>
                     <select id="shipping" name="shipping"
-                        class="block mt-1 p-2 border rounded-lg dark:bg-gray-800 dark:text-gray-400 mb-6">
-                        <option value="JNE">JNE</option>
-                        <option value="POS">POS Indonesia</option>
-                        <option value="TIKI">TIKI</option>
-                        <option value="J&T">J&T</option>
-                        <option value="Sicepat">Sicepat</option>
-                    </select>
+                        class="block mt-1 p-2 border rounded-lg dark:bg-gray-800 dark:text-gray-400 mb-6"
+                        onchange="updateTotal()" required>
+                        <option value="" disabled selected>- Select Shipping Method -</option>
+                        <option value="JNE" data-cost="15000">JNE - Rp 15.000</option>
+                        <option value="J&T" data-cost="12000">J&T - Rp 12.000</option>
+                        <option value="POS" data-cost="10000">POS Indonesia - Rp 10.000</option>
+                        <option value="TIKI" data-cost="13000">TIKI - Rp 13.000</option>
+                        <option value="Sicepat" data-cost="11000">Sicepat - Rp 11.000</option>
+                    </select>   
 
                     <!-- Payment Proof -->
                     <div class="mt-8">
@@ -129,6 +131,67 @@
                             clear and of good quality.</p>
                     </div>
 
+                    <!-- Recap of Purchase Details -->
+                    <div class="mt-8 border p-8 rounded-xl bg-gray-50 dark:bg-gray-800 dark:border-gray-700 shadow-lg">
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Order Summary</h2>
+                        <table
+                            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg">
+                            <thead>
+                                <tr
+                                    class="text-md font-semibold text-gray-900 dark:text-white bg-gray-200 dark:bg-gray-700">
+                                    <th class="p-5 text-left">No</th>
+                                    <th class="p-5 text-left">Product</th>
+                                    <th class="p-5 text-left">Price</th>
+                                    <th class="p-5 text-left">Quantity</th>
+                                    <th class="p-5 text-left">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($cart_items as $index => $item)
+                                    <tr class="text-md text-gray-900 dark:text-white border-b">
+                                        <td class="p-5">{{ $index + 1 }}</td>
+                                        <td class="p-5 flex items-center space-x-5">
+                                            <div
+                                                class="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden">
+                                                <img src="{{ asset('storage/' . $item->product->image) }}"
+                                                    alt="{{ $item->product->name }}"
+                                                    class="w-full h-full object-cover">
+                                            </div>
+                                            <div>
+                                                <h2 class="font-semibold">{{ $item->product->name }}</h2>
+                                            </div>
+                                        </td>
+                                        <td class="p-5">
+                                            Rp{{ number_format($item->product->price, 0, ',', '.') }}</td>
+                                        <td class="p-5">{{ $item->quantity }}</td>
+                                        <td class="p-5">Rp{{ number_format($item->price, 0, ',', '.') }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+
+                        <div class="mt-10 bg-gray-100 dark:bg-gray-700 p-6 rounded-lg">
+                            <div class="flex justify-between items-center text-md text-gray-900 dark:text-white">
+                                <span class="font-bold">Total Product Price:</span>
+                                <span class="font-semibold">Rp{{ number_format($cart->price, 0, ',', '.') }}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-md text-gray-900 dark:text-white mt-2">
+                                <span><strong>Shipping Cost:</strong></span>
+                                <span id="shipping-cost" class="font-semibold">Rp 0</span>
+                            </div>
+                            <div
+                                class="flex justify-between items-center text-lg font-bold text-gray-900 dark:text-white mt-4">
+                                <span>Total Payment:</span>
+                                <span id="final-total">Rp{{ number_format($cart->price, 0, ',', '.') }}</span>
+                            </div>
+                            <p class="text-md text-green-600 dark:text-green-400 font-medium text-center mt-3"
+                                id="free-shipping-msg" style="display: none;">
+                                🎉 Congratulations! You got free shipping!
+                            </p>
+                        </div>
+                    </div>
+
                     <!-- Confirm Payment Button -->
                     <button type="submit"
                         class="mt-6 px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
@@ -137,5 +200,17 @@
                 </form>
             </div>
         </div>
+        <script>
+            function updateTotal() {
+                let shippingSelect = document.getElementById("shipping");
+                let selectedOption = shippingSelect.options[shippingSelect.selectedIndex];
+                let shippingCost = parseInt(selectedOption.getAttribute("data-cost"));
+                let productTotal = {{ $cart->price }};
+                let finalTotal = productTotal + shippingCost;
+
+                document.getElementById("shipping-cost").innerText = `Rp ${shippingCost.toLocaleString('id-ID')}`;
+                document.getElementById("final-total").innerText = `Rp ${finalTotal.toLocaleString('id-ID')}`;
+            }
+        </script>
     </section>
 </x-layouts.layout>

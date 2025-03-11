@@ -55,19 +55,17 @@ class Product extends Model
 
     public function updateRatings()
     {
-        // Hitung total rating dan rata-rata rating produk
-        $totalRatings = DB::table('ratings')
-            ->where('product_id', $this->id)
-            ->count();  // Menghitung jumlah rating
+        // Ambil semua rating produk ini
+        $ratings = $this->ratings();
 
-        $averageRating = DB::table('ratings')
-            ->where('product_id', $this->id)
-            ->avg('rating'); // Mengambil rata-rata rating
+        // Hitung total dan rata-rata rating
+        $totalRatings = $ratings->count();
+        $averageRating = $ratings->avg('rating') ?? 0; // Pastikan tidak null
 
-        // Perbarui produk dengan total rating dan rata-rata rating
+        // Update langsung ke model
         $this->update([
-            'average_rating' => round($averageRating, 2), // Bulatkan rata-rata ke 2 desimal
-            'total_ratings' => $totalRatings, // Jumlah rating
+            'average_rating' => round($averageRating, 2),
+            'total_ratings' => $totalRatings,
         ]);
     }
 

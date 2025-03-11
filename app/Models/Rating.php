@@ -26,4 +26,16 @@ class Rating extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    // Scope untuk filtering berdasarkan pencarian
+    public function scopeFilter($query, array $filters)
+    {
+        if (!empty($filters['search'])) {
+            $query->whereHas('user', function ($q) use ($filters) {
+                $q->where('name', 'like', '%' . $filters['search'] . '%');
+            })->orWhereHas('product', function ($q) use ($filters) {
+                $q->where('name', 'like', '%' . $filters['search'] . '%');
+            })->orWhere('comment', 'like', '%' . $filters['search'] . '%');
+        }
+    }
 }

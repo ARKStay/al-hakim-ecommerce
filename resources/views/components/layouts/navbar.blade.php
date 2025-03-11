@@ -4,7 +4,7 @@
             <!-- Logo and Desktop Links -->
             <div class="flex items-center">
                 <div class="flex-shrink-0">
-                    <img class="h-14 w-14" src="{{ asset('storage/banks/logo.svg') }}" alt="Your Company">
+                    <img class="h-14 w-14" src="{{ asset('storage/banks/AH-2.png') }}" alt="Your Company">
                 </div>                
                 <!-- Desktop Navigation Links -->
                 <div class="hidden md:block">

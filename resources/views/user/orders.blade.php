@@ -3,7 +3,11 @@
 
     <div class="container mx-auto p-6 mb-32">
         @if ($orders->isEmpty())
-            <p class="text-gray-600">You have no orders yet.</p>
+            <p class="text-gray-600 my-12 flex flex-col items-center justify-center">
+                <span class="text-2xl font-semibold">No Orders Found</span>
+                <span class="text-lg text-gray-500 mt-2">Looks like you haven't placed any orders yet. Start shopping now
+                    and grab your favorite items!</span>
+            </p>
         @else
             <div class="overflow-x-auto bg-white rounded-lg shadow-md">
                 <table class="min-w-full border-collapse">
@@ -23,9 +27,9 @@
                                 <td class="px-4 py-2 border">{{ $order->id }}</td>
                                 <td class="px-4 py-2 border">
                                     <ul class="list-disc pl-5">
-                                        @foreach ($order->cart->items as $item)
+                                        @foreach ($order->orderItems as $item)
                                             <li class="text-gray-800">
-                                                {{ optional($item->product)->name ?? 'N/A' }}
+                                                {{ optional($item->product)->name ?? 'N/A' }} (x{{ $item->quantity }})
                                             </li>
                                         @endforeach
                                     </ul>
@@ -50,10 +54,8 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-2 border">
-                                    <button 
-                                        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"
-                                        onclick="openModal({{ $order->id }})"
-                                    >
+                                    <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                        onclick="openModal({{ $order->id }})">
                                         View Details
                                     </button>
                                 </td>
@@ -68,8 +70,7 @@
     <!-- Modal -->
     <div id="orderModal"
         class="fixed inset-0 bg-gray-800 bg-opacity-50 items-center justify-center transition-opacity duration-300 hidden"
-        data-visible="false" 
-        onclick="closeModal()">
+        data-visible="false" onclick="closeModal()">
         <div class="bg-white rounded-lg w-2/3 p-6 shadow-lg" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center border-b pb-3">
                 <h3 class="text-xl font-semibold">Order Details</h3>
@@ -93,10 +94,8 @@
             const orders = @json($orders);
             const order = orders.find(o => o.id === orderId);
 
-            // Base URL for images
             const baseURL = "{{ asset('storage') }}";
 
-            // Format harga menggunakan Intl.NumberFormat
             function formatCurrency(value) {
                 return new Intl.NumberFormat('id-ID', {
                     style: 'currency',
@@ -104,9 +103,7 @@
                 }).format(value);
             }
 
-            // Generate modal content
             const modalContent = document.getElementById('modalContent');
-            let total = 0;
             modalContent.innerHTML = `
                 <table class="min-w-full border-collapse text-gray-800">
                     <thead class="bg-gray-100">
@@ -115,14 +112,10 @@
                             <th class="px-4 py-2 border text-left">Image</th>
                             <th class="px-4 py-2 border text-left">Quantity</th>
                             <th class="px-4 py-2 border text-left">Price</th>
-                            <th class="px-4 py-2 border text-left">Total</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${order.cart.items.map(item => {
-                            const itemTotal = item.quantity * item.price;
-                            total += itemTotal;
-                            return `
+                        ${order.order_items.map(item => `  
                                 <tr>
                                     <td class="px-4 py-2 border">${item.product ? item.product.name : 'N/A'}</td>
                                     <td class="px-4 py-2 border">
@@ -132,18 +125,22 @@
                                     </td>
                                     <td class="px-4 py-2 border">${item.quantity}</td>
                                     <td class="px-4 py-2 border">${formatCurrency(item.price)}</td>
-                                    <td class="px-4 py-2 border">${formatCurrency(itemTotal)}</td>
                                 </tr>
-                            `;
-                        }).join('')}
+                            `).join('')}
                     </tbody>
                 </table>
-                <div class="mt-4 text-right font-semibold">
-                    <p><strong>Total Amount:</strong> ${formatCurrency(total)}</p>
+                <div class="mt-4 font-semibold">
+                    <div class="flex justify-between">
+                        <p><strong>Shipping Cost:</strong></p>
+                        <p>${formatCurrency(order.shipping_cost)}</p>
+                    </div>
+                    <div class="flex justify-between mt-2">
+                        <p><strong>Total Amount:</strong></p>
+                        <p>${formatCurrency(order.total_price)}</p>
+                    </div>
                 </div>
             `;
 
-            // Show modal
             modal.classList.remove('hidden');
             modal.classList.add('flex', 'opacity-100');
         }
@@ -154,4 +151,5 @@
             modal.classList.add('hidden');
         }
     </script>
+
 </x-layouts.layout>

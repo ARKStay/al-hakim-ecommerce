@@ -4,7 +4,7 @@
             <!-- Logo Section -->
             <div class="mb-6 md:mb-0">
                 <a href="#" class="flex items-center">
-                    <img src="{{ asset('storage/banks/logo.svg') }}" class="mr-3 h-14" alt="Al Hakim Logo" />
+                    <img src="{{ asset('storage/banks/AH.png') }}" class="mr-3 h-14" alt="Al Hakim Logo" />
                     <span class="text-2xl font-semibold text-white">Al Hakim Store</span>
                 </a>
             </div>

@@ -19,7 +19,7 @@ class="bg-white border-b border-gray-200 px-4 py-2.5 fixed left-0 right-0 top-0 
             </svg>
         </button>
         <a href="/dashboard" class="flex items-center justify-between mr-4">
-            <img src="{{ asset('storage/banks/logo_2.svg') }}" class="mr-3 h-14" alt="Company Logo" />
+            <img src="{{ asset('storage/banks/AH-2.png') }}" class="mr-3 h-14" alt="Company Logo" />
             <span class="self-center text-2xl font-semibold whitespace-nowrap">Al-Hakim
                 Store</span>
         </a>

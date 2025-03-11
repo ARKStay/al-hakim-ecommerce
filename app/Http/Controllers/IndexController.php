@@ -16,7 +16,11 @@ class IndexController extends Controller
         return view('index', [
             'title' => 'Home',
             'products' => Product::with(['category'])->inRandomOrder()->take(8)->get(),
-            'banners' => Banner::where('status', 'on')->get()
+            'banners' => Banner::where('status', 'on')->get(),
+            'trendingProducts' => Product::with(['category'])
+                ->orderBy('average_rating', 'desc')
+                ->take(4)
+                ->get(),
         ]);
     }
 
@@ -26,10 +30,21 @@ class IndexController extends Controller
     public function product_detail($slug)
     {
         $product = Product::with('category')->where('slug', $slug)->firstOrFail();
-    
+
         return view('product_detail', [
             'title' => $product->name,
             'product' => $product,
-        ]);        
+        ]);
+    }
+
+    /**
+     * Menampilkan daftar produk.
+     */
+    public function products()
+    {
+        return view('products', [
+            'title' => 'Our Products',
+            'products' => Product::latest()->filter(request()->all())->get()
+        ]);
     }
 }

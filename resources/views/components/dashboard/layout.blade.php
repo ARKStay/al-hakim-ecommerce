@@ -11,7 +11,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Trix Editor -->
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
-    <link rel="icon" href="{{ asset('storage/banks/favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('storage/banks/favicon123.ico') }}" type="image/x-icon">
     <script type="text/javascript" src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
     <style>
         trix-toolbar [data-trix-button-group="file-tools"] {

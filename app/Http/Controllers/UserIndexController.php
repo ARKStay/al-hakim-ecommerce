@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
 use App\Models\Banner;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class UserIndexController extends Controller
@@ -15,8 +15,12 @@ class UserIndexController extends Controller
     {
         return view('user.index', [
             'title' => 'Home',
-            'products' => Product::with(['category'])->inRandomOrder()->take(8)->get(), // Mengambil 8 produk acak
-            'banners' => Banner::where('status', 'on')->get() // Mengambil banner yang aktif
+            'products' => Product::with(['category'])->inRandomOrder()->take(8)->get(),
+            'banners' => Banner::where('status', 'on')->get(),
+            'trendingProducts' => Product::with(['category'])
+                ->orderBy('average_rating', 'desc')
+                ->take(4)
+                ->get(),
         ]);
     }
 
@@ -26,7 +30,7 @@ class UserIndexController extends Controller
     public function detail($slug)
     {
         $product = Product::with('category')->where('slug', $slug)->firstOrFail(); // Mengambil produk berdasarkan slug
-    
+
         return view('user.detail', [
             'title' => $product->name, // Judul halaman sesuai dengan nama produk
             'product' => $product, // Mengirimkan data produk ke tampilan

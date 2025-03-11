@@ -14,7 +14,7 @@ class DashboardShippedsController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Order::query();
+        $query = Order::with(['items.product', 'user']); // Load relasi produk dan user
 
         // Filter hanya menampilkan order dengan payment_status 'approved'
         $query->where('payment_status', 'approved');

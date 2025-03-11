@@ -81,17 +81,20 @@
                 </div>
 
                 <!-- Table -->
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto w-full">
                     <table class="w-full text-sm text-left text-gray-500">
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                             <tr>
                                 <th scope="col" class="px-4 py-3"></th>
                                 <th scope="col" class="px-4 py-3">No.</th>
-                                <th scope="col" class="px-4 py-3">Payment Proof</th>
-                                <th scope="col" class="px-4 py-3">Order Number</th>
-                                <th scope="col" class="px-4 py-3">User Name</th>
-                                <th scope="col" class="px-4 py-3">Payment Status</th>
-                                <th scope="col" class="px-4 py-3">Order Date</th>
+                                <th scope="col" class="px-4 py-3 whitespace-nowrap">Payment Proof</th>
+                                <th scope="col" class="px-4 py-3 whitespace-nowrap">Order Number</th>
+                                <th scope="col" class="px-4 py-3 whitespace-nowrap">User Name</th>
+                                <th scope="col" class="px-4 py-3 whitespace-nowrap">Total Shopping</th>
+                                <th scope="col" class="px-4 py-3 whitespace-nowrap">Shipping Cost</th>
+                                <th scope="col" class="px-4 py-3 whitespace-nowrap">Total Payment</th>
+                                <th scope="col" class="px-4 py-3 whitespace-nowrap">Payment Status</th>
+                                <th scope="col" class="px-4 py-3 whitespace-nowrap">Order Date</th>
                                 <th scope="col" class="px-4 py-3 whitespace-nowrap">Last Update</th>
                                 <th scope="col" class="px-4 py-3">Action</th>
                             </tr>
@@ -110,9 +113,18 @@
                                             No proof
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3 font-medium text-gray-900">{{ $order->cart_id }}</td>
-                                    <td class="px-4 py-3 font-medium text-gray-900">{{ $order->user->name }}</td>
-                                    <td class="px-4 py-3 font-medium">
+                                    <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
+                                        {{ $order->cart_id }}</td>
+                                    <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
+                                        {{ $order->user->name }}</td>
+                                    <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">Rp
+                                        {{ number_format($order->total_price, 0, ',', '.') }}</td>
+                                    <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">Rp
+                                        {{ number_format($order->shipping_cost, 0, ',', '.') }}</td>
+                                    <td class="px-4 py-3 font-medium text-red-500 whitespace-nowrap">Rp
+                                        {{ number_format($order->total_price + $order->shipping_cost, 0, ',', '.') }}
+                                    </td>
+                                    <td class="px-4 py-3 font-medium whitespace-nowrap">
                                         @if ($order->payment_status === 'pending')
                                             <span class="text-yellow-500">Pending</span>
                                         @elseif ($order->payment_status === 'approved')
@@ -123,15 +135,14 @@
                                             <span class="text-gray-500">Unknown</span>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3 font-medium text-gray-900">
+                                    <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
                                         {{ $order->created_at->format('d M Y H:i') }}
                                     </td>
-                                    <td class="px-4 py-3 font-medium text-gray-900">
+                                    <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
                                         {{ $order->updated_at->format('d M Y H:i') }}
                                     </td>
-                                    <td class="px-4 py-3 font-medium">
+                                    <td class="px-4 py-3 font-medium whitespace-nowrap">
                                         <div class="flex flex-col space-y-2">
-                                            <!-- Approve and Reject Buttons -->
                                             @if ($order->payment_status === 'pending')
                                                 <form action="{{ route('dashboard.payments.approve', $order->id) }}"
                                                     method="POST">
@@ -152,7 +163,6 @@
                                                     </button>
                                                 </form>
                                             @elseif ($order->payment_status === 'rejected')
-                                                <!-- Delete Button for approved or rejected status -->
                                                 <form action="{{ route('dashboard.payments.delete', $order->id) }}"
                                                     method="POST" id="delete-form-{{ $order->id }}">
                                                     @csrf
@@ -179,8 +189,8 @@
                     <div class="relative bg-white rounded-lg shadow-lg p-6 max-w-lg">
                         <button @click="showModal = false"
                             class="absolute -top-3 -right-3 bg-gray-100 text-gray-500 hover:text-gray-800 rounded-full p-1 shadow-md focus:outline-none focus:ring-2 focus:ring-gray-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
