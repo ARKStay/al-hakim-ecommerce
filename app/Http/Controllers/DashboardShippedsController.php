@@ -9,68 +9,87 @@ use Illuminate\Support\Facades\Storage;
 class DashboardShippedsController extends Controller
 {
     /**
-     * Menampilkan daftar order yang sudah dibayar (payment_status = approved),
-     * dengan opsi filter berdasarkan status order dan pencarian.
+     * Show list of paid orders, filterable by status and search keyword.
      */
     public function index(Request $request)
     {
-        $query = Order::with(['items.product', 'user']); // Load relasi produk dan user
+        $query = Order::with([
+            'items.product',     // Produk yang dibeli
+            'items.variant',     // Variasi produk (warna, ukuran, dll)
+            'user'               // Pembeli
+        ]);
 
-        // Filter hanya menampilkan order dengan payment_status 'approved'
-        $query->where('payment_status', 'approved');
+        // Show only paid orders
+        $query->where('payment_status', 'paid');
 
-        // Jika ada filter status order, tambahkan kondisi untuk status order
+        // Filter berdasarkan order status (optional)
         if ($request->has('status') && $request->status !== 'all') {
             $query->where('order_status', $request->status);
         }
 
-        // Jika ada pencarian berdasarkan cart_id, user name, atau order_status
+        // Filter berdasarkan search query
         if ($request->has('search') && $request->search !== '') {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('cart_id', 'like', '%' . $search . '%')
-                    ->orWhereHas('user', function ($query) use ($search) {
-                        $query->where('name', 'like', '%' . $search . '%');
+                $q->where('midtrans_order_id', 'like', '%' . $search . '%')
+                    ->orWhere('shipping_method', 'like', '%' . $search . '%')
+                    ->orWhere('payment_status', 'like', '%' . $search . '%')
+                    ->orWhere('order_status', 'like', '%' . $search . '%')
+                    ->orWhere('created_at', 'like', '%' . $search . '%')
+                    ->orWhereHas('user', function ($qUser) use ($search) {
+                        $qUser->where('name', 'like', '%' . $search . '%');
                     })
-                    ->orWhere('order_status', 'like', '%' . $search . '%'); // Filter berdasarkan status
+                    ->orWhereHas('items', function ($qItem) use ($search) {
+                        $qItem->where('product_name', 'like', '%' . $search . '%')
+                            ->orWhere('color', 'like', '%' . $search . '%')
+                            ->orWhere('size', 'like', '%' . $search . '%');
+                    });
             });
         }
 
-        // Mengambil data order berdasarkan filter yang sudah diterapkan
-        $orders = $query->get();
+        // Ambil data terbaru duluan
+        $orders = $query->latest()->get();
 
-        // Mengirimkan data order ke tampilan
         return view('dashboard.shippeds.index', compact('orders'));
     }
 
     /**
-     * Memperbarui status order menjadi 'complete'.
+     * Update order status to 'complete'.
      */
-    public function complete($id)
+    public function shipped($id)
     {
         $order = Order::findOrFail($id);
-        $order->update(['order_status' => 'complete']); // Perbarui status order menjadi 'complete'
+        $order->update(['order_status' => 'shipped']);
 
-        // Redirect ke halaman index dengan pesan sukses
-        return redirect()->route('dashboard.shippeds.index')->with('success', 'Order status updated to complete.');
+        return redirect()->route('dashboard.shippeds.index')
+            ->with('success', 'Order marked as shipped!');
+    }
+
+    public function show($id)
+    {
+        $order = Order::with([
+            'items.product',
+            'items.variant',
+            'user'
+        ])->findOrFail($id);
+
+        return view('dashboard.shippeds.show', compact('order'));
     }
 
     /**
-     * Menghapus order dan gambar terkait dari storage.
+     * Delete order and related image from storage (if any).
      */
     public function delete($id)
     {
         $order = Order::findOrFail($id);
 
-        // Jika order memiliki gambar, hapus gambar tersebut dari storage
         if ($order->image) {
             Storage::delete($order->image);
         }
 
-        // Menghapus data order dari database
         $order->delete();
 
-        // Redirect ke halaman index dengan pesan sukses
-        return redirect()->route('dashboard.shippeds.index')->with('success', 'Order deleted successfully.');
+        return redirect()->route('dashboard.shippeds.index')
+            ->with('success', 'Order deleted successfully.');
     }
 }

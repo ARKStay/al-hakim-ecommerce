@@ -34,7 +34,6 @@
             </script>
         @endif
 
-
         <!-- Search Form -->
         <form class="max-w-md mx-auto mb-5">
             <label for="search" class="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label>
@@ -57,12 +56,10 @@
         <!-- Product Grid -->
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             @forelse ($products as $product)
-                <div class="relative flex flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm h-full">
-                    <!-- Category Tag -->
-                    <p
-                        class="absolute -top-2 -left-2 z-10 inline-block rounded-lg bg-blue-500 px-3 py-1 text-xs font-medium text-white shadow-lg hover:bg-blue-600">
-                        {{ $product->category->name ?? 'Uncategorized' }}
-                    </p>
+                <div
+                    class="relative flex flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm h-full hover:shadow-md transition">
+
+                    {{-- Gambar Produk --}}
                     <div class="h-56 w-full">
                         <a href="{{ route('user.products.detail', $product->slug) }}">
                             @if ($product->image)
@@ -75,34 +72,55 @@
                             @endif
                         </a>
                     </div>
+
+                    {{-- Info Produk --}}
                     <div class="pt-6 flex-grow">
+                        {{-- Nama Produk --}}
                         <a href="{{ route('user.products.detail', $product->slug) }}"
                             class="block text-lg font-semibold leading-tight text-gray-900 hover:underline truncate"
-                            style="max-width: 100%;" title="{{ $product->name }}">
+                            title="{{ $product->name }}">
                             {{ Str::limit($product->name, 30, '...') }}
                         </a>
 
-                        <!-- Grid untuk info biar sejajar -->
-                        <div class="mt-2 grid grid-cols-1 gap-1 text-sm text-gray-500">
-                            <p><span class="font-medium text-gray-700">Color:</span>
-                                {{ $product->color ?? 'No Color' }}</p>
-                            <p><span class="font-medium text-gray-700">Stock:</span>
-                                {{ $product->stock > 0 ? $product->stock : 'Out of stock' }}</p>
-                            <p><span class="font-medium text-gray-700">Ratings:</span> ⭐
-                                {{ number_format($product->average_rating, 1) }} ({{ $product->total_ratings }}
-                                reviews)</p>
+                        @php
+                            $variants = $product->variants;
+                            $minPrice = $variants->min('price');
+                            $maxPrice = $variants->max('price');
+                            $soldCount = $product->sold ?? 0;
+                        @endphp
+
+                        {{-- Rating & Terjual --}}
+                        <div class="mt-2 flex items-center justify-between text-sm text-gray-500">
+                            {{-- Rating --}}
+                            <div class="flex items-center space-x-1">
+                                <span>⭐</span>
+                                <span>{{ number_format($product->average_rating, 1) }}</span>
+                            </div>
+
+                            {{-- Terjual --}}
+                            <div>
+                                @if ($soldCount > 0)
+                                    Terjual {{ $soldCount }}
+                                @else
+                                    <span>&nbsp;</span>
+                                @endif
+                            </div>
                         </div>
 
-                        <!-- Harga & Ukuran sejajar -->
+                        {{-- Harga --}}
                         <div class="mt-4 flex items-center justify-between">
-                            <p class="text-2xl font-extrabold text-gray-900">
-                                Rp{{ number_format($product->price, 0, ',', '.') }}
-                            </p>
-                            <p class="text-sm text-gray-500">Size: {{ $product->sizes->name ?? '-' }}</p>
+                            @if ($minPrice === $maxPrice)
+                                <p class="text-2xl font-extrabold text-gray-900">
+                                    Rp{{ number_format($minPrice, 0, ',', '.') }}
+                                </p>
+                            @else
+                                <p class="text-xl font-bold text-gray-900">
+                                    Rp{{ number_format($minPrice, 0, ',', '.') }} -
+                                    Rp{{ number_format($maxPrice, 0, ',', '.') }}
+                                </p>
+                            @endif
                         </div>
                     </div>
-
-                    <!-- Button tetap di bawah -->
                     <div class="mt-auto pt-4">
                         <a href="{{ route('user.products.detail', $product->slug) }}"
                             class="inline-flex items-center justify-center bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 w-full">

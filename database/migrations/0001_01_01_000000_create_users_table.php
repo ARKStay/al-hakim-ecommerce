@@ -20,8 +20,15 @@ return new class extends Migration
             $table->string('password');
             $table->string('phone')->nullable();
             $table->text('address')->nullable();
+            $table->string('province_id')->nullable();
+            $table->string('province_name')->nullable();
+            $table->string('city_id')->nullable();
+            $table->string('city_name')->nullable();
+            $table->string('district_id')->nullable();
+            $table->string('district_name')->nullable();
             $table->rememberToken();
             $table->string('role')->default('user');
+            $table->string('account_status')->default('active');
             $table->timestamps();
         });
 

@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('carts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->integer('price')->default(0);
-            $table->string('status')->default('pending');
+            $table->integer('total_price')->default(0); // total harga semua item
+            $table->string('status')->default('pending'); // pending, checkout, paid, etc
             $table->timestamps();
         });
     }

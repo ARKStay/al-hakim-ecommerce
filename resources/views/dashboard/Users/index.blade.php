@@ -15,20 +15,20 @@
             });
         </script>
     @endif
-    <!-- Notification Delete -->
+    <!-- Notification Deactivate -->
     <script>
-        function confirmDelete(id) {
+        function confirmDeactivate(id) {
             Swal.fire({
-                title: 'Are you sure?',
-                text: "This action cannot be undone!",
+                title: 'Deactivate this account?',
+                text: "The user will not be able to log in until reactivated.",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#d33',
+                confirmButtonColor: '#f97316',
                 cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!'
+                confirmButtonText: 'Yes, deactivate it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    document.getElementById('deleteForm-' + id).submit();
+                    document.getElementById('deactivateForm-' + id).submit();
                 }
             });
         }
@@ -73,6 +73,8 @@
                             <th scope="col" class="px-4 py-3">Phone</th>
                             <th scope="col" class="px-4 py-3">Address</th>
                             <th scope="col" class="px-4 py-3">Password</th>
+                            <th scope="col" class="px-4 py-3 whitespace-nowrap">Account Status</th>
+                            <th scope="col" class="px-4 py-3 whitespace-nowrap">Account Created</th>
                             <th scope="col" class="px-4 py-3 whitespace-nowrap">Last Update</th>
                         </tr>
                     </thead>
@@ -86,56 +88,90 @@
                                                 const rect = $el.getBoundingClientRect();
                                                 const windowHeight = window.innerHeight;
                                     
-                                                // Cek ruang di bawah elemen
+                                                // Check available space below the element
                                                 if (rect.bottom + 250 > windowHeight) {
-                                                    dropdownPosition = 'top'; // Posisi dropdown di atas jika ruang terbatas di bawah
+                                                    dropdownPosition = 'top';
                                                 } else {
-                                                    dropdownPosition = 'bottom'; // Jika ada cukup ruang, tampilkan di bawah
+                                                    dropdownPosition = 'bottom';
                                                 }
                                             }
                                         });
                                     }">
-                                    @if ($user->role === 'user')
-                                        <button @click="open = !open"
-                                            class="inline-flex items-center text-sm font-medium hover:bg-gray-100 p-1.5 text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none">
-                                            <svg class="w-5 h-5" aria-hidden="true" fill="currentColor"
-                                                viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                                <path
-                                                    d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                                            </svg>
-                                        </button>
-                                        <div x-show="open" x-transition
-                                            :class="{ 'top-full': dropdownPosition === 'bottom', 'bottom-full mb-2': dropdownPosition === 'top' }"
-                                            class="z-50 w-44 bg-white rounded divide-y divide-gray-100 shadow absolute left-0">
-                                            <ul class="py-1 text-sm"
-                                                aria-labelledby="dropdown-button-{{ $user->name }}">
+
+                                    <button @click="open = !open"
+                                        class="inline-flex items-center text-sm font-medium hover:bg-gray-100 p-1.5 text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none">
+                                        <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                                        </svg>
+                                    </button>
+
+                                    <div x-show="open" x-transition
+                                        :class="{ 'top-full': dropdownPosition === 'bottom', 'bottom-full mb-2': dropdownPosition === 'top' }"
+                                        class="z-50 w-44 bg-white rounded divide-y divide-gray-100 shadow absolute left-0">
+
+                                        <ul class="py-1 text-sm">
+
+                                            {{-- Admin → Edit --}}
+                                            @if ($user->role === 'admin')
                                                 <li>
-                                                    <form action="/dashboard/users/{{ $user->id }}" method="POST"
-                                                        id="deleteForm-{{ $user->id }}">
+                                                    <a href="{{ url('/dashboard/users/' . $user->id . '/edit') }}"
+                                                        class="flex w-full items-center py-2 px-4 hover:bg-gray-100 text-blue-500">
+                                                        <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg"
+                                                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                            stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.586-9.414a2 2 0 0 1 2.828 2.828L12.828 15H9v-3.828l8.414-8.414z" />
+                                                        </svg>
+                                                        Edit
+                                                    </a>
+                                                </li>
+                                            @endif
+
+                                            {{-- User → Deactivate Account --}}
+                                            @if ($user->role === 'user')
+                                                <li>
+                                                    <form
+                                                        action="{{ url('/dashboard/users/' . $user->id . ($user->account_status === 'active' ? '/deactivate' : '/activate')) }}"
+                                                        method="POST" id="statusForm-{{ $user->id }}">
                                                         @csrf
-                                                        @method('DELETE')
+                                                        @method('PATCH')
                                                         <button type="button"
-                                                            onclick="confirmDelete('{{ $user->id }}')"
-                                                            class="flex w-full items-center py-2 px-4 hover:bg-gray-100 text-red-500">
-                                                            <svg class="w-4 h-4 mr-2" aria-hidden="true"
-                                                                xmlns="http://www.w3.org/2000/svg" width="24"
-                                                                height="24" fill="none" viewBox="0 0 24 24">
-                                                                <path stroke="currentColor" stroke-linecap="round"
-                                                                    stroke-linejoin="round" stroke-width="2"
-                                                                    d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z" />
+                                                            onclick="confirmStatusChange('{{ $user->id }}', '{{ $user->account_status }}')"
+                                                            class="flex w-full items-center py-2 px-4 hover:bg-gray-100 {{ $user->account_status === 'active' ? 'text-orange-500' : 'text-green-500' }}">
+                                                            <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg"
+                                                                fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                                                stroke-width="2">
+                                                                @if ($user->account_status === 'active')
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        d="M18.364 5.636l-12.728 12.728m12.728 0L5.636 5.636" />
+                                                                @else
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        d="M5 13l4 4L19 7" />
+                                                                @endif
                                                             </svg>
-                                                            Delete
+                                                            {{ $user->account_status === 'active' ? 'Deactivate Account' : 'Activate Account' }}
                                                         </button>
                                                     </form>
                                                 </li>
-                                            </ul>
-                                        </div>
-                                    @endif
+                                            @endif
+                                        </ul>
+                                    </div>
                                 </td>
                                 <td class="px-4 py-3 font-medium text-gray-900">{{ $loop->iteration }}</td>
-                                <td class="px-4 py-3 font-medium text-gray-900">{{ $user->name }}</td>
-                                <td class="px-4 py-3 font-medium text-gray-900">{{ $user->username }}</td>
-                                <td class="px-4 py-3 font-medium text-gray-900">{{ $user->email }}</td>
+                                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap"
+                                    title="{{ $user->name }}">
+                                    {{ Str::limit($user->name, 20) }}
+                                </td>
+                                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap"
+                                    title="{{ $user->username }}">
+                                    {{ Str::limit($user->username, 20) }}
+                                </td>
+                                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap"
+                                    title="{{ $user->email }}">
+                                    {{ Str::limit($user->email, 20) }}
+                                </td>
                                 <td class="px-4 py-2 font-medium text-gray-900 whitespace-nowrap"
                                     title="{{ $user['phone'] }}">
                                     {{ Str::limit($user['phone'], 20) }}</td>
@@ -144,7 +180,15 @@
                                     {{ Str::limit($user['address'], 20) }}</td>
                                 <td class="px-4 py-3 font-medium text-gray-900">
                                     {{ str_repeat('*', min(10, strlen($user->password))) }}</td>
-                                <td class="px-4 py-3 font-medium text-gray-900">{{ $user->updated_at }}</td>
+                                <td
+                                    class="px-4 py-3 font-medium 
+                                    {{ $user->account_status === 'active' ? 'text-green-600' : 'text-red-600' }}">
+                                    {{ ucfirst($user->account_status) }}
+                                </td>
+                                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
+                                    {{ $user->created_at->format('d M Y, h:i A') }}</td>
+                                <td class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
+                                    {{ $user->updated_at->format('d M Y, h:i A') }}</td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -152,4 +196,27 @@
             </div>
         </div>
     </div>
+    <script>
+        function confirmStatusChange(id, status) {
+            let actionText = status === 'active' ? 'Deactivate this account?' : 'Activate this account?';
+            let confirmButtonText = status === 'active' ? 'Yes, deactivate it!' : 'Yes, activate it!';
+            let confirmButtonColor = status === 'active' ? '#f97316' : '#22c55e';
+
+            Swal.fire({
+                title: actionText,
+                text: status === 'active' ?
+                    "The user will not be able to log in until reactivated." :
+                    "The user will regain access to their account.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: confirmButtonColor,
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: confirmButtonText
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('statusForm-' + id).submit();
+                }
+            });
+        }
+    </script>
 </x-dashboard.layout>

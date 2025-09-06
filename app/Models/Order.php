@@ -16,51 +16,21 @@ class Order extends Model
         'cart_id',
         'total_price',
         'shipping_method',
-        'image',
+        'shipping_cost',
+        'midtrans_order_id',
         'payment_status',
         'order_status',
+        'payment_type',
+        'payment_token',
+        'payment_url',
     ];
 
-    /**
-     * Relasi dengan model User
-     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // /**
-    //  * Relasi dengan model Cart
-    //  */
-    // public function cart()
-    // {
-    //     return $this->belongsTo(Cart::class);
-    // }
-
-    // public function products()
-    // {
-    //     return $this->hasManyThrough(Product::class, Cart_Item::class, 'cart_id', 'id', 'cart_id', 'product_id');
-    // }
-
-    // /**
-    //  * Relasi dengan model CartItem untuk mendapatkan barang di dalam order
-    //  */
-    // public function cartItems()
-    // {
-    //     return $this->hasMany(Cart_Item::class, Cart::class, 'id', 'cart_id');
-    // }
-
-    // public function ratings()
-    // {
-    //     return $this->hasManyThrough(Rating::class, Cart_Item::class, 'cart_id', 'product_id', 'cart_id', 'product_id');
-    // }
-
-    public function items()
-    {
-        return $this->hasMany(OrderItem::class);
-    }
-
-    public function orderItems(): HasMany
+    public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
     }
@@ -70,10 +40,15 @@ class Order extends Model
         return $this->hasManyThrough(
             Rating::class,
             OrderItem::class,
-            'order_id', // Foreign key di `OrderItem`
-            'product_id', // Foreign key di `Rating`
-            'id', // Primary key di `Order`
-            'product_id' // Primary key di `OrderItem`
+            'order_id',      // Foreign key di OrderItem
+            'product_id',    // Foreign key di Rating
+            'id',            // Local key di Order
+            'product_id'     // Local key di OrderItem
         );
+    }
+
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class);
     }
 }

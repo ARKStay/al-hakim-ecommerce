@@ -10,109 +10,157 @@
                     text: "{{ session('success') }}",
                     showConfirmButton: false,
                     timer: 5000,
-                    position: 'mid'
+                    position: 'center'
                 });
             });
         </script>
     @endif
 
-    <div class="mx-auto max-w-screen-xl px-4 2xl:px-0">
-        <!-- Carousel -->
-        <div class="relative w-full mx-auto overflow-hidden rounded-lg mb-8" x-data="{ currentSlide: 0, interval: null }"
-            x-init="interval = setInterval(() => { currentSlide = (currentSlide + 1) % {{ count($banners) }} }, 5000);">
-            
+    <div class="max-w-screen-xl mx-auto px-4 lg:px-8 py-8">
+        {{-- Carousel --}}
+        <div x-data="{ currentSlide: 0, interval: null }" x-init="interval = setInterval(() => { currentSlide = (currentSlide + 1) % {{ max(count($banners), 1) }} }, 5000);" class="relative overflow-hidden rounded-xl shadow-md mb-12">
+
             <div class="flex transition-transform duration-700 ease-out"
-                :style="'transform: translateX(-' + (currentSlide * 100) + '%);'">
-                @foreach ($banners as $banner)
+                :style="'transform: translateX(-' + (currentSlide * 100) + '%)'">
+                @forelse ($banners as $banner)
                     <div class="w-full flex-shrink-0">
-                        @if ($banner->image)
-                            <div class="w-full aspect-[2/1]">
-                                <img src="{{ asset('storage/' . $banner->image) }}"
-                                    class="w-full h-full object-cover rounded-lg" alt="Banner Image">
-                            </div>
-                        @else
-                            <div class="w-full aspect-[16/9] flex items-center justify-center bg-gray-200 text-gray-500 rounded-lg">
-                                <p>No image available</p>
-                            </div>
-                        @endif
+                        <div class="aspect-[2/1]">
+                            @if ($banner->image)
+                                <img src="{{ asset('storage/' . $banner->image) }}" class="w-full h-full object-cover"
+                                    alt="Banner">
+                            @else
+                                <div class="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500">
+                                    No image available
+                                </div>
+                            @endif
+                        </div>
                     </div>
-                @endforeach
+                @empty
+                    <div class="w-full aspect-[2/1] flex items-center justify-center bg-gray-100 text-gray-500">
+                        No image available
+                    </div>
+                @endforelse
             </div>
 
-            <!-- Navigation Arrows -->
+            {{-- Arrows --}}
             <button @click="currentSlide = (currentSlide - 1 + {{ count($banners) }}) % {{ count($banners) }}"
-                class="absolute top-1/2 left-2 transform -translate-y-1/2 bg-gray-800/50 text-white p-2 rounded-full hover:bg-gray-800/70">
+                class="absolute top-1/2 left-3 -translate-y-1/2 bg-white/70 hover:bg-white text-gray-800 p-2 rounded-full shadow">
                 &#10094;
             </button>
             <button @click="currentSlide = (currentSlide + 1) % {{ count($banners) }}"
-                class="absolute top-1/2 right-2 transform -translate-y-1/2 bg-gray-800/50 text-white p-2 rounded-full hover:bg-gray-800/70">
+                class="absolute top-1/2 right-3 -translate-y-1/2 bg-white/70 hover:bg-white text-gray-800 p-2 rounded-full shadow">
                 &#10095;
             </button>
 
-            <!-- Indicators -->
-            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+            {{-- Dots --}}
+            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
                 @foreach ($banners as $index => $banner)
                     <button @click="currentSlide = {{ $index }}"
-                        :class="{ 'bg-white': currentSlide === {{ $index }}, 'bg-gray-500': currentSlide !== {{ $index }} }"
-                        class="h-3 w-3 rounded-full"></button>
+                        :class="currentSlide === {{ $index }} ? 'bg-blue-600' : 'bg-gray-400'"
+                        class="h-2.5 w-2.5 rounded-full transition duration-300"></button>
                 @endforeach
             </div>
         </div>
 
-        <!-- 🔥 Trending Products -->
-        <div class="mb-8">
-            <h2 class="text-2xl font-bold mb-4">🔥 Trending Products</h2>
-            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {{-- Feature Icons --}}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center mb-16">
+            @php
+                $features = [
+                    ['img' => 'fashion.png', 'label' => 'Modest & Elegant'],
+                    ['img' => 'fabric.png', 'label' => 'Premium Fabric'],
+                    ['img' => 'tunic.png', 'label' => 'Sharia Compliant'],
+                    ['img' => 'alterations.png', 'label' => 'Perfect Tailored Fit'],
+                ];
+            @endphp
+
+            @foreach ($features as $feature)
+                <div class="flex flex-col items-center">
+                    <img src="{{ asset('storage/banks/' . $feature['img']) }}" class="w-12 h-12 mb-2"
+                        alt="{{ $feature['label'] }}">
+                    <p class="text-sm font-medium text-gray-700">{{ $feature['label'] }}</p>
+                </div>
+            @endforeach
+        </div>
+
+        {{-- About --}}
+        <div class="text-center max-w-3xl mx-auto mb-16 px-4">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">About Toko Al Hakim</h2>
+            <p class="text-gray-600 leading-relaxed">
+                Toko Al Hakim is a clothing store that offers a variety of Muslim fashion choices that are not only
+                comfortable to wear but also meaningful. By prioritizing quality materials, elegant designs, and a touch
+                of
+                modernity, we present products suitable for daily wear and special occasions.
+            </p>
+            <p class="text-gray-600 mt-4 leading-relaxed">
+                The name "Al Hakim" means "The Most Wise", and that is the value we carry in every product — a wise
+                choice, full of consideration, emphasizing simplicity and meaningful beauty.
+                Toko Al Hakim is where style meets values.
+            </p>
+        </div>
+
+        {{-- Trending Products --}}
+        <div class="mb-12">
+            <h2 class="text-2xl font-bold text-center text-gray-800 mb-8">Trending Products</h2>
+            <div class="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 @foreach ($trendingProducts as $product)
-                    <div class="relative flex flex-col rounded-lg border border-gray-200 bg-white p-6 shadow-sm h-full hover:shadow-md transition">
-                        <p class="absolute -top-2 -left-2 z-10 inline-block rounded-lg bg-green-500 px-3 py-1 text-xs font-medium text-white">
-                            Trending
-                        </p>
-                        <div class="h-56 w-full">
-                            <a href="{{ route('user.products.detail', $product->slug) }}">
+                    @php
+                        $variants = $product->variants;
+                        $minPrice = $variants->min('price');
+                        $maxPrice = $variants->max('price');
+                        $soldCount = $product->sold ?? 0;
+                    @endphp
+
+                    <div
+                        class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow hover:shadow-lg transition duration-300 flex flex-col">
+                        <a href="{{ route('user.products.detail', $product->slug) }}">
+                            <div class="aspect-[4/3] bg-gray-100">
                                 @if ($product->image)
-                                    <img class="mx-auto h-full object-cover rounded" src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}">
+                                    <img src="{{ asset('storage/' . $product->image) }}"
+                                        class="w-full h-full object-cover" alt="{{ $product->name }}">
                                 @else
-                                    <div class="h-56 w-full flex items-center justify-center bg-gray-100 text-gray-500">
-                                        <p>No image available</p>
+                                    <div class="h-full w-full flex items-center justify-center text-gray-400">No image
                                     </div>
                                 @endif
-                            </a>
-                        </div>
-                        <div class="pt-6 flex-grow">
+                            </div>
+                        </a>
+                        <div class="p-4 flex flex-col flex-grow">
                             <a href="{{ route('user.products.detail', $product->slug) }}"
-                                class="block text-lg font-semibold leading-tight text-gray-900 hover:underline truncate"
+                                class="text-base font-semibold text-gray-800 hover:text-blue-600 truncate"
                                 title="{{ $product->name }}">
-                                {{ Str::limit($product->name, 30, '...') }}
+                                {{ Str::limit($product->name, 40) }}
                             </a>
-                            <div class="mt-2 text-sm text-gray-500">
-                                <p>⭐ {{ number_format($product->average_rating, 1) }} ({{ $product->total_ratings }} reviews)</p>
-                                <p>🛒 Stock: {{ $product->stock > 0 ? $product->stock : 'Out of stock' }}</p>
+
+                            <div class="mt-1 flex justify-between items-center text-sm text-gray-500">
+                                <div class="flex items-center space-x-1">
+                                    <span>⭐</span>
+                                    <span>{{ number_format($product->average_rating, 1) }}</span>
+                                </div>
+                                <div>{{ $soldCount > 0 ? "Terjual $soldCount" : '' }}</div>
                             </div>
-                            <div class="mt-4 flex items-center justify-between">
-                                <p class="text-2xl font-extrabold text-gray-900">
-                                    Rp{{ number_format($product->price, 0, ',', '.') }}
-                                </p>
+
+                            <div class="mt-3">
+                                @if ($minPrice === $maxPrice)
+                                    <p class="text-lg font-bold text-gray-900">
+                                        Rp{{ number_format($minPrice, 0, ',', '.') }}
+                                    </p>
+                                @else
+                                    <p class="text-sm font-medium text-gray-800">
+                                        Rp{{ number_format($minPrice, 0, ',', '.') }} -
+                                        Rp{{ number_format($maxPrice, 0, ',', '.') }}
+                                    </p>
+                                @endif
                             </div>
-                        </div>
-                        <div class="mt-auto pt-4">
-                            <a href="{{ route('user.products.detail', $product->slug) }}"
-                                class="inline-flex items-center justify-center bg-blue-600 text-white px-5 py-2.5 rounded-lg hover:bg-blue-700 w-full">
-                                View Product
-                            </a>
+
+                            <div class="mt-auto pt-4">
+                                <a href="{{ route('user.products.detail', $product->slug) }}"
+                                    class="block text-center bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition">
+                                    View Product
+                                </a>
+                            </div>
                         </div>
                     </div>
                 @endforeach
             </div>
-        </div>
-
-        <!-- Show More Button -->
-        <div class="mt-6 flex justify-center">
-            <a href="/user/products"
-                class="rounded-lg border border-gray-700 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 
-        hover:bg-gray-100 hover:text-blue-700 hover:border-blue-700 focus:outline-none focus:ring-4 focus:ring-gray-200">
-                Show more
-            </a>
         </div>
     </div>
 </x-layouts.layout>

@@ -2,33 +2,48 @@
 
 namespace Database\Factories;
 
-use App\Models\Sizes;
-use App\Models\Category;
-use Illuminate\Support\Str;
-use Database\Seeders\CategorySeeder;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Product>
- */
 class ProductFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = Product::class;
+
     public function definition(): array
     {
+        $name = $this->faker->words(3, true);
+
         return [
-            'name' => $this->faker->words(3, true),  // Nama produk dengan tiga kata acak
-            'slug' => Str::slug($this->faker->sentence()),  // Slug otomatis dari nama
-            'description' => $this->faker->paragraph(),  // Deskripsi dengan kalimat acak
-            'color' => $this->faker->words(3, true),
-            'price' => $this->faker->randomFloat(2, 10, 1000),  // Harga dengan 2 desimal, rentang 10-1000
-            'stock' => $this->faker->numberBetween(0, 100),  // Jumlah stok antara 0-100
-            'category_id' => Category::factory(),
-            'sizes_id' => Sizes::factory()
+            'name' => $name,
+            'slug' => Str::slug($name),
+            'description' => $this->faker->paragraph(),
+            'image' => 'https://via.placeholder.com/400x400',
+            'average_rating' => $this->faker->randomFloat(2, 0, 5),
+            'total_ratings' => $this->faker->numberBetween(0, 1000),
         ];
+    }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Product $product) {
+            $colors = ['Hitam', 'Biru'];
+            $sizes = ['M', 'L'];
+
+            foreach ($colors as $color) {
+                foreach ($sizes as $size) {
+                    \App\Models\ProductVariant::create([
+                        'product_id' => $product->id,
+                        'color' => $color,
+                        'size' => $size,
+                        'price' => fake()->numberBetween(50000, 200000),
+                        'stock' => fake()->numberBetween(1, 50),
+                        'variant_image' => 'https://via.placeholder.com/400x400',
+                        'weight' => fake()->randomFloat(2, 0.1, 1.5),
+                    ]);
+                }
+            }
+        });
     }
 }

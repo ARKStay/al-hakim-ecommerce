@@ -5,65 +5,121 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // Mendapatkan bulan saat ini
-        $currentMonth = Carbon::now()->month;
+        $today = Carbon::today();
 
-        // Total Pendapatan Bulanan (hanya pesanan dengan status 'complete')
-        $monthlyRevenue = Order::whereMonth('created_at', $currentMonth)
-            ->where('order_status', 'complete')
-            ->sum('total_price');
-
-        // Total Pembeli Bulanan (hanya pesanan dengan status 'complete')
-        $monthlyBuyers = Order::whereMonth('created_at', $currentMonth)
-            ->where('order_status', 'complete')
-            ->distinct('user_id')
-            ->count('user_id');
-
-        // Total Transaksi Bulanan (hanya pesanan dengan status 'complete')
-        $monthlyOrders = Order::whereMonth('created_at', $currentMonth)
-            ->where('order_status', 'complete')
+        // Today’s Sales (complete orders)
+        $todaySales = Order::whereDate('created_at', $today)
+            ->where('order_status', 'completed')
             ->count();
 
-        // Data pendapatan harian untuk bulan ini
+        // Total Sales
+        $totalSales = Order::where('order_status', 'completed')->count();
+
+        // Today’s Revenue
+        $todayRevenue = Order::whereDate('created_at', $today)
+            ->where('order_status', 'completed')
+            ->sum('total_price');
+
+        // Total Revenue
+        $totalRevenue = Order::where('order_status', 'completed')->sum('total_price');
+
+        // Daily Revenue (this month)
         $dailyRevenue = Order::selectRaw('DATE(created_at) as date, SUM(total_price) as revenue')
-            ->whereMonth('created_at', $currentMonth)
-            ->where('order_status', 'complete')
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->where('order_status', 'completed')
             ->groupBy('date')
             ->orderBy('date')
             ->get();
 
-        // Menghitung jumlah pesanan dengan status pembayaran 'approved' dan 'rejected'
-        $orders = Order::whereMonth('created_at', Carbon::now()->month)
-            ->selectRaw('sum(case when payment_status = "approved" then 1 else 0 end) as approved, 
-            sum(case when payment_status = "rejected" then 1 else 0 end) as rejected')
-            ->first();
+        // Daily Sales (this month)
+        $dailySales = Order::selectRaw('DATE(created_at) as date, COUNT(*) as sales')
+            ->whereMonth('created_at', Carbon::now()->month)
+            ->where('order_status', 'completed')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
 
-        // Jika nilai null, set ke 0
-        $approved = $orders->approved ?? 0;
-        $rejected = $orders->rejected ?? 0;
+        // Latest Orders
+        $latestOrders = Order::where('order_status', 'completed')
+            ->with('user')
+            ->latest()
+            ->limit(5)
+            ->get();
 
-        // Mendapatkan 5 transaksi terakhir dengan informasi pembeli dan total pengeluaran
-        $latestTransactions = Order::where('order_status', 'complete')
-            ->with('user') // Mengambil relasi dengan User
-            ->latest() // Mengurutkan berdasarkan waktu terbaru
-            ->limit(5) // Ambil 5 transaksi terakhir
-            ->get(['user_id', 'total_price', 'created_at']);
-
-        // Mengirimkan data ke tampilan dashboard
         return view('dashboard.index', [
             'title' => 'Analytics Dashboard',
-            'monthlyRevenue' => $monthlyRevenue,
-            'monthlyBuyers' => $monthlyBuyers,
-            'monthlyOrders' => $monthlyOrders,
+            'todaySales' => $todaySales,
+            'totalSales' => $totalSales,
+            'todayRevenue' => $todayRevenue,
+            'totalRevenue' => $totalRevenue,
             'dailyRevenue' => $dailyRevenue,
-            'latestTransactions' => $latestTransactions,
-            'approved' => $approved,
-            'rejected' => $rejected,
+            'dailySales' => $dailySales,
+            'latestOrders' => $latestOrders,
         ]);
+    }
+
+    public function printReport(Request $request)
+    {
+        $range = $request->get('range', 'all');
+        $startDate = null;
+        $endDate = null;
+
+        if (!$request->range) {
+            return redirect()->back()->with('error', 'Please select a period first!');
+        }
+
+        switch ($range) {
+            case 'today':
+                $startDate = Carbon::today();
+                $endDate = Carbon::today()->endOfDay();
+                break;
+            case 'week':
+                $startDate = Carbon::now()->startOfWeek();
+                $endDate = Carbon::now()->endOfWeek();
+                break;
+            case 'month':
+                $startDate = Carbon::now()->startOfMonth();
+                $endDate = Carbon::now()->endOfMonth();
+                break;
+            case 'year':
+                $startDate = Carbon::now()->startOfYear();
+                $endDate = Carbon::now()->endOfYear();
+                break;
+            case 'custom':
+                $startDate = Carbon::parse($request->get('start_date'));
+                $endDate = Carbon::parse($request->get('end_date'))->endOfDay();
+                break;
+            default: // all
+                $startDate = Order::min('created_at');
+                $endDate = Order::max('created_at');
+                break;
+        }
+
+        $orders = Order::where('order_status', 'completed')
+            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('created_at', [$startDate, $endDate]);
+            })
+            ->with('user')
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $totalSales = $orders->count();
+        $totalRevenue = $orders->sum('total_price');
+
+        $pdf = Pdf::loadView('dashboard.print', [
+            'orders' => $orders,
+            'totalSales' => $totalSales,
+            'totalRevenue' => $totalRevenue,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+        ]);
+
+        return $pdf->stream('sales-report.pdf');
     }
 }

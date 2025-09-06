@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Sizes;
 use App\Models\Product;
-use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use \Cviebrock\EloquentSluggable\Services\SlugService;
@@ -16,23 +14,26 @@ class DashboardProductsController extends Controller
      */
     public function index(Request $request)
     {
-        // Mengambil produk berdasarkan filter pencarian
-        $products = Product::filter($request->only('search'))->get();
+        $products = Product::with('variants')
+            ->withAvg('ratings', 'rating')     // Rata-rata rating
+            ->withCount('ratings')             // Total rating
+            ->filter($request->only('search')) // Filter search
+            ->get();
 
-        // Mengirimkan data produk ke tampilan
-        return view('dashboard.products.index', ['title' => 'Product List', 'products' => $products]);
+        return view('dashboard.products.index', [
+            'title' => 'Product List',
+            'products' => $products
+        ]);
     }
+
 
     /**
      * Menampilkan form untuk menambahkan produk baru.
      */
     public function create()
     {
-        // Menampilkan form tambah produk dengan data kategori dan ukuran
-        return view('dashboard.Products.create', [
+        return view('dashboard.products.create', [
             'title' => 'Add Product',
-            'categories' => Category::all(),
-            'sizes' => Sizes::all()
         ]);
     }
 
@@ -41,28 +42,59 @@ class DashboardProductsController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi input dari form
+        // Validasi untuk produk
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:products,slug',  // Unik slug untuk produk
-            'category_id' => 'required|exists:categories,id',
-            'image' => 'image|file|max:30720', // Validasi gambar
-            'sizes_id' => 'required|exists:sizes,id',
-            'color' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
+            'slug' => 'required|string|max:255|unique:products,slug',
+            'image' => 'image|file|max:30720',
             'description' => 'nullable|string',
+            'variants.*.color' => 'required|string|max:50',
+            'variants.*.size' => 'required|string|max:10',
+            'variants.*.price' => 'required|numeric|min:0',
+            'variants.*.stock' => 'required|integer|min:0',
+            'variants.*.weight' => 'required|numeric|min:0',
+            'variants.*.variant_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        // Jika ada gambar, simpan gambar ke storage
+        // Simpan gambar produk utama jika ada
         if ($request->file('image')) {
             $validatedData['image'] = $request->file('image')->store('product-images');
         }
 
-        // Simpan data produk ke dalam database
-        Product::create($validatedData);
+        $product = Product::create([
+            'name' => $validatedData['name'],
+            'slug' => $validatedData['slug'],
+            'image' => $validatedData['image'] ?? null,
+            'description' => $validatedData['description'] ?? null,
+        ]);
 
-        // Redirect ke halaman produk dengan pesan sukses
+        // Simpan product_variants
+        if ($request->has('variants')) {
+            // Simpan gambar per warna hanya sekali
+            $colorImageMap = [];
+
+            foreach ($request->variants as $variant) {
+                $color = $variant['color'];
+
+                if (!isset($colorImageMap[$color])) {
+                    if (isset($variant['variant_image']) && $variant['variant_image']) {
+                        $colorImageMap[$color] = $variant['variant_image']->store('variant-images');
+                    } else {
+                        $colorImageMap[$color] = null;
+                    }
+                }
+
+                $product->variants()->create([
+                    'color' => $color,
+                    'size' => $variant['size'],
+                    'price' => $variant['price'],
+                    'stock' => $variant['stock'],
+                    'weight' => $variant['weight'],
+                    'variant_image' => $colorImageMap[$color],
+                ]);
+            }
+        }
+
         return redirect('/dashboard/products')->with('Success', 'New product has been added!');
     }
 
@@ -79,8 +111,6 @@ class DashboardProductsController extends Controller
         return view('dashboard.Products.show', [
             'product' => $product,
             'title' => 'Show Product',
-            'categories' => Category::all(),
-            'sizes' => Sizes::all(),
             'average_rating' => $averageRating, // Rata-rata rating produk
             'total_ratings' => $totalRatings,   // Total rating produk
         ]);
@@ -91,12 +121,9 @@ class DashboardProductsController extends Controller
      */
     public function edit(Product $product)
     {
-        // Menampilkan form edit produk dengan data produk, kategori, dan ukuran
-        return view('dashboard.Products.edit', [
+        return view('dashboard.products.edit', [
             'title' => 'Edit Product',
-            'product' => $product,
-            'categories' => Category::all(),
-            'sizes' => Sizes::all()
+            'product' => $product->load('variants'),
         ]);
     }
 
@@ -105,38 +132,109 @@ class DashboardProductsController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        // Aturan validasi untuk data yang akan diperbarui
+        // Validasi seperti biasa tapi sesuaikan patternnya
         $rules = [
             'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'image' => 'image|file|max:30720', // Validasi gambar
-            'sizes_id' => 'required|exists:sizes,id',
-            'color' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
+            'image' => 'nullable|image|file|max:30720',
             'description' => 'nullable|string',
+            'variants.*.*.color' => 'required|string|max:50',
+            'variants.*.*.size' => 'required|string|max:10',
+            'variants.*.*.price' => 'required|numeric|min:0',
+            'variants.*.*.stock' => 'required|integer|min:0',
+            'variants.*.*.weight' => 'required|numeric|min:0',
+            'variants.*.*.variant_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ];
 
-        // Jika slug diubah, pastikan slug tetap unik
         if ($request->slug != $product->slug) {
             $rules['slug'] = 'required|unique:products';
         }
 
-        // Validasi input
         $validatedData = $request->validate($rules);
 
-        // Jika ada gambar baru, hapus gambar lama dan simpan yang baru
+        // Update data produk
         if ($request->file('image')) {
-            if ($request->oldImage) {
-                Storage::delete($request->oldImage); // Hapus gambar lama
+            if ($product->image) {
+                Storage::delete($product->image);
             }
             $validatedData['image'] = $request->file('image')->store('product-images');
         }
 
-        // Memperbarui data produk
-        $product->update($validatedData);
+        $product->update([
+            'name' => $validatedData['name'],
+            'slug' => $validatedData['slug'] ?? $product->slug,
+            'image' => $validatedData['image'] ?? $product->image,
+            'description' => $validatedData['description'] ?? null,
+        ]);
 
-        // Redirect ke halaman produk dengan pesan sukses
+        // --- Handle Variants ---
+        $existingVariantIds = $product->variants->pluck('id')->toArray();
+        $submittedVariantIds = [];
+
+        if ($request->has('variants')) {
+            $variantImages = $request->file('variant_images');
+
+            foreach ($request->variants as $color => $variantGroup) {
+                foreach ($variantGroup as $variantIndex => $variant) {
+                    $variantId = $variant['id'] ?? null;
+
+                    // Ambil file variant_image berdasarkan color dari $variantImages
+                    $variantImagePath = null;
+                    if (isset($variantImages[$color])) {
+                        $variantImagePath = $variantImages[$color]->store('variant-images');
+                    }
+
+                    if ($variantId) {
+                        // Update existing variant
+                        $submittedVariantIds[] = $variantId;
+                        $existing = $product->variants()->find($variantId);
+                        if ($existing) {
+                            $existing->update([
+                                'color' => $variant['color'],
+                                'size' => $variant['size'],
+                                'price' => $variant['price'],
+                                'stock' => $variant['stock'],
+                                'weight' => $variant['weight'],
+                                'variant_image' => $variantImagePath ?? $existing->variant_image,
+                            ]);
+                        }
+                    } else {
+                        // New variant
+                        $newVariant = $product->variants()->create([
+                            'color' => $variant['color'],
+                            'size' => $variant['size'],
+                            'price' => $variant['price'],
+                            'stock' => $variant['stock'],
+                            'weight' => $variant['weight'],
+                            'variant_image' => $variantImagePath,
+                        ]);
+                        $submittedVariantIds[] = $newVariant->id;
+                    }
+                }
+            }
+        }
+
+        // Hapus varian yang tidak dikirim (berarti dihapus dari form)
+        $variantsToDelete = array_diff($existingVariantIds, $submittedVariantIds);
+        foreach ($variantsToDelete as $variantId) {
+            $variant = $product->variants()->find($variantId);
+
+            if ($variant) {
+                // Cek apakah ada varian lain dengan warna dan gambar yang sama
+                $otherVariantsWithSameImage = $product->variants()
+                    ->where('color', $variant->color)
+                    ->where('variant_image', $variant->variant_image)
+                    ->where('id', '!=', $variant->id)
+                    ->exists();
+
+                // Hapus gambar kalau nggak ada varian lain yang pakai
+                if ($variant->variant_image && !$otherVariantsWithSameImage) {
+                    Storage::delete($variant->variant_image);
+                }
+
+                $variant->delete();
+            }
+        }
+
         return redirect('/dashboard/products')->with('Success', 'Product updated successfully!');
     }
 
@@ -145,15 +243,19 @@ class DashboardProductsController extends Controller
      */
     public function destroy(Product $product)
     {
-        // Jika produk memiliki gambar, hapus gambar dari storage
         if ($product->image) {
             Storage::delete($product->image);
         }
-        
-        // Menghapus data produk
+
+        // Hapus semua gambar variant juga
+        foreach ($product->variants as $variant) {
+            if ($variant->variant_image) {
+                Storage::delete($variant->variant_image);
+            }
+        }
+
         $product->delete();
 
-        // Redirect ke halaman produk dengan pesan sukses
         return redirect('/dashboard/products')->with('Success', 'Product has been deleted!');
     }
 

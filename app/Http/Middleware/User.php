@@ -9,17 +9,16 @@ use Illuminate\Support\Facades\Auth;
 
 class User
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        // Periksa apakah pengguna sudah terautentikasi
-        if (Auth::check() && Auth::user()->role == 'user') {
-            return $next($request);
+        if (!Auth::check()) {
+            return redirect()->route('login');
         }
-        abort(401);
+
+        if (Auth::user()->role !== 'user') {
+            return redirect()->route('dashboard'); // kalau admin, lempar ke dashboard
+        }
+
+        return $next($request);
     }
 }

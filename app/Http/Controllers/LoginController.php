@@ -2,9 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Password;
+
 
 class LoginController extends Controller
 {
@@ -37,21 +43,72 @@ class LoginController extends Controller
 
         // Coba untuk melakukan autentikasi dengan kredensial yang diberikan
         if (Auth::attempt($credentials)) {
-            // Regenerasi session setelah login berhasil untuk menghindari session fixation
             $request->session()->regenerate();
 
-            // Cek peran user setelah session baru di-set
-            if (Auth::user()->role === 'admin') {
-                // Jika user adalah admin, arahkan ke dashboard
-                return redirect()->intended('/dashboard');
+            $user = Auth::user();
+
+            if ($user->role === 'admin') {
+                return redirect()->intended('/dashboard')->with('success', 'Welcome back, ' . $user->username . '!');
             } else {
-                // Jika user biasa, arahkan ke halaman user
-                return redirect()->intended('/user');
+                return redirect()->intended('/user')->with('success', 'Welcome, ' . $user->username . '!');
             }
         }
 
         // Jika login gagal, kembali ke halaman login dengan pesan error
         return back()->with('loginError', 'Login failed!');
+    }
+
+    public function forgotPassword()
+    {
+        return view('auth.forgot-password');
+    }
+
+    public function sendResetLink(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with(['status' => __($status)])
+            : back()->withErrors(['email' => __($status)]);
+    }
+
+    public function showResetForm($token)
+    {
+        $email = DB::table('password_reset_tokens')->where('token', $token)->value('email');
+
+        return view('auth.reset-password', [
+            'token' => $token,
+            'email' => $email
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password),
+                    'remember_token' => Str::random(60),
+                ])->save();
+            }
+        );
+
+        return $status === Password::PASSWORD_RESET
+            ? redirect()->route('login')->with('status', __($status))
+            : back()->withErrors(['email' => [__($status)]]);
     }
 
     /**

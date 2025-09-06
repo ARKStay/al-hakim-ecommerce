@@ -5,104 +5,141 @@ use App\Http\Controllers\IndexController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\ShippingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserIndexController;
 use App\Http\Controllers\UserOrdersController;
+use App\Http\Controllers\DestinationController;
 use App\Http\Controllers\UserHistoryController;
 use App\Http\Controllers\UserProductController;
 use App\Http\Controllers\UserProfileController;
-use App\Http\Controllers\DashboardRatingsController;
-use App\Http\Controllers\DashboardSizesController;
+use App\Http\Controllers\DashboardCrmController;
 use App\Http\Controllers\DashboardUsersController;
 use App\Http\Controllers\DashboardBannersController;
-use App\Http\Controllers\DashboardPaymentsController;
+use App\Http\Controllers\DashboardRatingsController;
 use App\Http\Controllers\DashboardProductsController;
 use App\Http\Controllers\DashboardShippedsController;
-use App\Http\Controllers\DashboardCategoriesController;
 
-// Rute untuk pengunjung yang belum login
+/*
+|--------------------------------------------------------------------------
+| Routes for guests (not logged in)
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware('guest')->group(function () {
-    // Menampilkan halaman utama
+    // Homepage
     Route::get('/', [IndexController::class, 'index']);
 
-    // Menampilkan detail produk berdasarkan slug
+    // Product detail by slug
     Route::get('/products/{slug}', [IndexController::class, 'product_detail'])->name('products.detail');
 
-    // Menampilkan daftar produk
+    // Product list
     Route::get('/products', [IndexController::class, 'products']);
 
-    // Menampilkan halaman login dan menangani proses login
+    // Login
     Route::get('/login', [LoginController::class, 'index'])->name('login');
     Route::post('/login', [LoginController::class, 'authenticate']);
 
-    // Menampilkan halaman register dan menangani proses pendaftaran
+    // Register
     Route::get('/register', [RegisterController::class, 'index'])->name('register');
     Route::post('/register', [RegisterController::class, 'store']);
+
+    // Reset Password
+    Route::get('/forgot-password', [LoginController::class, 'forgotPassword'])->name('password.request');
+    Route::post('/forgot-password', [LoginController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [LoginController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [LoginController::class, 'resetPassword'])->name('password.update');
 });
 
-// Rute untuk logout yang hanya bisa diakses oleh pengguna yang sudah login
+/*
+|--------------------------------------------------------------------------
+| Logout route (only for logged in users)
+|--------------------------------------------------------------------------
+*/
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth');
 
-// Rute untuk pengguna yang sudah login dengan akses admin
+/*
+|--------------------------------------------------------------------------
+| Admin routes
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'admin'])->group(function () {
-    // Menampilkan dashboard admin
+    // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/dashboard/print-report', [DashboardController::class, 'printReport'])->name('dashboard.print');
 
-    // Mengecek slug produk sebelum disimpan
+    // Products management
     Route::get('/dashboard/products/checkSlug', [DashboardProductsController::class, 'checkSlug']);
-
-    // Menangani CRUD produk, pengguna, kategori, ukuran, dan banner di dashboard
     Route::resource('/dashboard/products', DashboardProductsController::class);
+
+    // Users management
     Route::resource('/dashboard/users', DashboardUsersController::class);
-    Route::resource('/dashboard/categories', DashboardCategoriesController::class)->except('show');
-    Route::resource('/dashboard/sizes', DashboardSizesController::class)->except('show');
+    Route::patch('/dashboard/users/{user}/toggle-status', [DashboardUsersController::class, 'toggleStatus'])->name('dashboard.users.toggle-status');
+    Route::patch('/dashboard/users/{user}/activate', [DashboardUsersController::class, 'activate'])->name('dashboard.users.activate');
+    Route::patch('/dashboard/users/{user}/deactivate', [DashboardUsersController::class, 'deactivate'])->name('dashboard.users.deactivate');
+
+    // Banners management
     Route::resource('/dashboard/banners', DashboardBannersController::class);
 
-    // Menampilkan dan menangani pembayaran di dashboard
-    Route::get('/dashboard/payments', [DashboardPaymentsController::class, 'index'])->name('dashboard.payments');
-    Route::patch('/dashboard/payments/{id}/approve', [DashboardPaymentsController::class, 'approve'])->name('dashboard.payments.approve');
-    Route::patch('/dashboard/payments/{id}/reject', [DashboardPaymentsController::class, 'reject'])->name('dashboard.payments.reject');
-    Route::delete('/dashboard/payments/{id}', [DashboardPaymentsController::class, 'delete'])->name('dashboard.payments.delete');
-
-    // Menangani pengiriman produk di dashboard
+    // Shipped management
     Route::get('/dashboard/shippeds', [DashboardShippedsController::class, 'index'])->name('dashboard.shippeds.index');
-    Route::patch('/dashboard/shippeds/{id}/complete', [DashboardShippedsController::class, 'complete'])->name('dashboard.shippeds.complete');
+    Route::patch('/dashboard/shippeds/{id}/shipped', [DashboardShippedsController::class, 'shipped'])->name('dashboard.shippeds.shipped');
     Route::delete('/dashboard/shippeds/{id}', [DashboardShippedsController::class, 'delete'])->name('dashboard.shippeds.delete');
+    Route::get('/dashboard/shippeds/{id}', [DashboardShippedsController::class, 'show'])->name('dashboard.shippeds.show');
 
-    // Route untuk manajemen rating di dashboard admin
+    // Ratings management
     Route::resource('/dashboard/ratings', DashboardRatingsController::class)->only(['index', 'destroy']);
+
+    // CRM
+    Route::resource('/dashboard/crm', DashboardCrmController::class);
 });
 
-// Rute untuk pengguna yang sudah login dengan akses user
+/*
+|--------------------------------------------------------------------------
+| User routes
+|--------------------------------------------------------------------------
+*/
 Route::middleware(['auth', 'user'])->group(function () {
-    // Menampilkan halaman utama pengguna
+    // Homepage for user
     Route::get('/user', [UserIndexController::class, 'index'])->name('user.index');
 
-    // Menampilkan detail produk berdasarkan slug untuk pengguna
+    // Product detail for user
     Route::get('user/products/{slug}', [UserIndexController::class, 'detail'])->name('user.products.detail');
 
-    // Menampilkan daftar produk untuk pengguna
+    // Product list for user
     Route::get('user/products', [UserProductController::class, 'index'])->name('user.products');
 
-    // Menangani profil pengguna
-    Route::resource('user/profile', UserProfileController::class)->parameters([
-        'profile' => 'user',
-    ]);
+    // User profile
+    Route::resource('user/profile', UserProfileController::class)->parameters(['profile' => 'user']);
 
-    // Menampilkan dan menangani pesanan pengguna
+    // Orders
     Route::get('/user/orders', [UserOrdersController::class, 'index'])->name('user.order');
+    Route::patch('/orders/{order}/mark-received', [UserOrdersController::class, 'markReceived'])->name('orders.markReceived');
+    Route::get('/orders/{order}/review', [UserOrdersController::class, 'review'])->name('orders.review');
+    Route::post('/orders/{order}/review', [UserOrdersController::class, 'storeReview'])->name('orders.review.store');
 
-    // Menampilkan riwayat pengguna dan menangani rating
+    // History & ratings
     Route::get('/user/history', [UserHistoryController::class, 'index'])->name('user.history');
     Route::post('/user/rating', [UserHistoryController::class, 'rateOrder'])->name('user.rating.store');
 
-    // Menangani penambahan produk ke keranjang dan proses checkout
+    // Cart & checkout
     Route::post('user/detail/{slug}', [UserProductController::class, 'cart']);
     Route::get('/user/cart', [UserProductController::class, 'check_out'])->name('user.cart');
     Route::delete('/user/cart/{id}', [UserProductController::class, 'delete'])->name('user.cart.delete');
     Route::get('confirm_check_out', [UserProductController::class, 'confirm_check_out']);
 
-    // Menangani pembayaran dan pesanan pengguna
+    // Payment
     Route::get('/user/payment', [PaymentController::class, 'index']);
     Route::post('/user/payment', [PaymentController::class, 'order'])->name('user.payment');
+
+    // Destination (province, city, district)
+    Route::get('/provinces', [DestinationController::class, 'getProvinces']);
+    Route::get('/cities/{provinceId}', [DestinationController::class, 'getCities']);
+    Route::get('/districts/{cityId}', [DestinationController::class, 'getDistricts']);
+
+    // Shipping cost
+    Route::post('/check-ongkir', [ShippingController::class, 'checkOngkir'])->name('check-ongkir');
+
+    // Midtrans Snap token
+    Route::post('/payment/snap-token', [PaymentController::class, 'getSnapToken'])->name('payment.snap.token');
 });

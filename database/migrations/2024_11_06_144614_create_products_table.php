@@ -16,14 +16,10 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->string('image')->nullable();
-            $table->string('color');
             $table->text('description')->nullable();
-            $table->integer('price');
-            $table->unsignedInteger('stock');
-            $table->foreignId('category_id')->nullable()->constrained('categories')->nullOnDelete();
-            $table->foreignId('sizes_id')->nullable()->constrained('sizes')->nullOnDelete();
             $table->decimal('average_rating', 3, 2)->default(0);
             $table->unsignedBigInteger('total_ratings')->default(0);
+            $table->unsignedBigInteger('sold')->default(0);
             $table->timestamps();
         });
     }

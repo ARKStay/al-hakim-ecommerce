@@ -51,9 +51,7 @@
                             $maincart = \App\Models\Cart::where('user_id', Auth::user()->id)
                                 ->where('status', 'pending')
                                 ->first();
-                            $cartcount = $maincart
-                                ? \App\Models\Cart_Item::where('cart_id', $maincart->id)->count()
-                                : 0;
+                            $cartcount = $maincart ? $maincart->items()->count() : 0;
                         @endphp
                         @if ($cartcount > 0)
                             <span

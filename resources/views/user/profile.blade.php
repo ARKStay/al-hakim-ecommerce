@@ -1,102 +1,103 @@
 <x-layouts.layout>
     <x-slot:title>{{ $title }}</x-slot:title>
 
-    <!-- Notification Success -->
-    @if (session('success'))
+    {{-- SweetAlert Notifications --}}
+    @if (session('success') || session('info'))
         <script>
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', function () {
                 Swal.fire({
-                    icon: 'success',
-                    title: 'Success!',
-                    text: "{{ session('success') }}",
-                    showConfirmButton: false,
-                    timer: 3000,
-                    toast: true,
-                    position: 'bottom-end'
-                });
-            });
-        </script>
-    @endif
-
-    <!-- Notification Info -->
-    @if (session('info'))
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Heads up!',
-                    text: "{{ session('info') }}",
-                    showConfirmButton: true,
-                    position: 'mid'
+                    icon: "{{ session('success') ? 'success' : 'info' }}",
+                    title: "{{ session('success') ? 'Success!' : 'Heads up!' }}",
+                    text: "{{ session('success') ?? session('info') }}",
+                    showConfirmButton: {{ session('success') ? 'false' : 'true' }},
+                    timer: {{ session('success') ? '3000' : 'null' }},
+                    toast: {{ session('success') ? 'true' : 'false' }},
+                    position: {{ session('success') ? "'bottom-end'" : "'center'" }},
                 });
             });
         </script>
     @endif
 
     <div class="max-w-screen-md w-full px-4 mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-        <!-- Back to Dashboard Button -->
-        <div class="mb-4">
-            <a href="/user"
-                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 border border-gray-300 rounded-lg hover:bg-gray-300 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600">
-                ← Back to Home
-            </a>
+
+        {{-- Breadcrumb --}}
+        <nav class="text-sm text-gray-500 mb-6 md:mt-2" aria-label="Breadcrumb">
+            <ol class="list-reset flex">
+                <li>
+                    <a href="/user" class="text-blue-500 hover:underline">Home</a>
+                    <span class="mx-2">/</span>
+                </li>
+                <li class="text-gray-700 dark:text-gray-300">Profile</li>
+            </ol>
+        </nav>
+
+        {{-- Title & Actions --}}
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+            <h2 class="text-2xl font-semibold text-center md:text-left mb-4 md:mb-0">My Profile</h2>
+            <div class="flex gap-4">
+                <a href="{{ route('profile.edit', ['user' => auth()->user()->id]) }}"
+                    class="bg-blue-500 text-white text-sm px-4 py-2 rounded hover:bg-blue-600 transition">
+                    Edit Profile
+                </a>
+
+                <form action="{{ route('profile.destroy', ['user' => auth()->user()->id]) }}" method="POST"
+                    id="deleteForm-{{ auth()->user()->id }}">
+                    @csrf
+                    @method('DELETE')
+                    <button type="button" onclick="confirmDelete('{{ auth()->user()->id }}')"
+                        class="bg-red-500 text-white text-sm px-4 py-2 rounded hover:bg-red-600 transition">
+                        Delete Account
+                    </button>
+                </form>
+            </div>
         </div>
 
-        <!-- Page Title -->
-        <h2 class="text-2xl font-semibold mb-6 text-center">User Profile</h2>
+        {{-- Profile Info Grid --}}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded shadow">
+                <p class="text-sm text-gray-500">Name</p>
+                <p class="text-base font-medium text-gray-900 dark:text-white">{{ auth()->user()->name }}</p>
+            </div>
 
-        <!-- Profile Table -->
-        <div class="overflow-x-auto">
-            <table class="table-auto w-full text-left border-collapse border border-gray-300 dark:border-gray-700">
-                <tbody>
-                    <tr class="border-b dark:border-gray-700">
-                        <th class="px-4 py-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-300">Name</th>
-                        <td class="px-4 py-2">{{ auth()->user()->name }}</td>
-                    </tr>
-                    <tr class="border-b dark:border-gray-700">
-                        <th class="px-4 py-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-300">Username</th>
-                        <td class="px-4 py-2">{{ auth()->user()->username }}</td>
-                    </tr>
-                    <tr class="border-b dark:border-gray-700">
-                        <th class="px-4 py-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-300">Email</th>
-                        <td class="px-4 py-2">{{ auth()->user()->email }}</td>
-                    </tr>
-                    <tr class="border-b dark:border-gray-700">
-                        <th class="px-4 py-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-300">Password</th>
-                        <td class="px-4 py-2">{{ str_repeat('*', min(strlen(auth()->user()->password), 15)) }}</td>
-                    </tr>
-                    <tr class="border-b dark:border-gray-700">
-                        <th class="px-4 py-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-300">Phone Number</th>
-                        <td class="px-4 py-2">{{ auth()->user()->phone ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <th class="px-4 py-2 bg-gray-100 dark:bg-gray-700 dark:text-gray-300">Address</th>
-                        <td class="px-4 py-2">{{ auth()->user()->address ?? '-' }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded shadow">
+                <p class="text-sm text-gray-500">Username</p>
+                <p class="text-base font-medium text-gray-900 dark:text-white">{{ auth()->user()->username }}</p>
+            </div>
 
-        <!-- Action Buttons -->
-        <div class="flex space-x-4 mt-6 justify-center">
-            <a href="{{ route('profile.edit', ['user' => auth()->user()->id]) }}"
-                class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-                Edit Profile
-            </a>
+            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded shadow">
+                <p class="text-sm text-gray-500">Email</p>
+                <p class="text-base font-medium text-gray-900 dark:text-white">{{ auth()->user()->email }}</p>
+            </div>
 
-            <form action="{{ route('profile.destroy', ['user' => auth()->user()->id]) }}" method="POST"
-                id="deleteForm-{{ auth()->user()->id }}">
-                @csrf
-                @method('DELETE')
-                <button type="button" onclick="confirmDelete('{{ auth()->user()->id }}')"
-                    class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
-                    Delete Account
-                </button>
-            </form>
+            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded shadow">
+                <p class="text-sm text-gray-500">Password</p>
+                <p class="text-base font-medium text-gray-900 dark:text-white">
+                    {{ str_repeat('*', min(strlen(auth()->user()->password), 15)) }}
+                </p>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded shadow">
+                <p class="text-sm text-gray-500">Phone Number</p>
+                <p class="text-base font-medium text-gray-900 dark:text-white">{{ auth()->user()->phone ?? '-' }}</p>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded shadow">
+                <p class="text-sm text-gray-500">Address</p>
+                <p class="text-base font-medium text-gray-900 dark:text-white">{{ auth()->user()->address ?? '-' }}</p>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded shadow sm:col-span-2">
+                <p class="text-sm text-gray-500">Destination</p>
+                <p class="text-base font-medium text-gray-900 dark:text-white">
+                    {{ auth()->user()->district_name ?? '-' }},
+                    {{ auth()->user()->city_name ?? '-' }},
+                    {{ auth()->user()->province_name ?? '-' }}
+                </p>
+            </div>
         </div>
     </div>
 
-    <!-- Notification Delete Confirmation -->
+    {{-- Confirm Delete Script --}}
     <script>
         function confirmDelete(id) {
             Swal.fire({

@@ -15,9 +15,9 @@ class UserIndexController extends Controller
     {
         return view('user.index', [
             'title' => 'Home',
-            'products' => Product::with(['category'])->inRandomOrder()->take(8)->get(),
+            'products' => Product::inRandomOrder()->take(8)->get(),
             'banners' => Banner::where('status', 'on')->get(),
-            'trendingProducts' => Product::with(['category'])
+            'trendingProducts' => Product::with('variants')
                 ->orderBy('average_rating', 'desc')
                 ->take(4)
                 ->get(),
@@ -29,11 +29,11 @@ class UserIndexController extends Controller
      */
     public function detail($slug)
     {
-        $product = Product::with('category')->where('slug', $slug)->firstOrFail(); // Mengambil produk berdasarkan slug
+        $product = Product::with('variants')->where('slug', $slug)->firstOrFail();
 
         return view('user.detail', [
-            'title' => $product->name, // Judul halaman sesuai dengan nama produk
-            'product' => $product, // Mengirimkan data produk ke tampilan
+            'title' => $product->name,
+            'product' => $product,
         ]);
     }
 }

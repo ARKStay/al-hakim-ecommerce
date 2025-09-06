@@ -13,14 +13,28 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
+
+            // Relasi user dan cart
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('cart_id')->constrained()->onDelete('cascade');
+
+            // Midtrans
+            $table->string('midtrans_order_id')->unique();
+
+            // Info transaksi
             $table->integer('total_price');
             $table->string('shipping_method');
             $table->integer('shipping_cost')->default(0);
-            $table->string('image')->nullable();
-            $table->string('payment_status')->default('pending');
-            $table->string('order_status')->default('pending');
+
+            // Status
+            $table->string('payment_status')->default('paid'); // contoh: pending, paid, failed, expired
+            $table->string('order_status')->default('pending');   // contoh: pending, processed, shipped, completed, cancelled
+
+            // Snap info tambahan
+            $table->string('payment_type')->nullable(); // credit_card, bank_transfer, dll
+            $table->string('payment_token')->nullable();
+            $table->string('payment_url')->nullable();
+
             $table->timestamps();
         });
     }

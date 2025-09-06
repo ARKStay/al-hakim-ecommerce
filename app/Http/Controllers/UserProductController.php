@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Cart;
 use App\Models\User;
 use App\Models\Product;
-use App\Models\Cart_Item;
+use App\Models\ProductVariant;
+use App\Models\CartItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,10 +17,9 @@ class UserProductController extends Controller
      */
     public function index()
     {
-        // Ambil semua input dari request untuk diteruskan ke filter
         return view('user.products', [
             'title' => 'Our Products',
-            'products' => Product::latest()->filter(request()->all())->get() // Filter produk berdasarkan request
+            'products' => Product::with('variants')->latest()->filter(request()->all())->get()
         ]);
     }
 
@@ -28,49 +28,54 @@ class UserProductController extends Controller
      */
     public function cart(Request $request, $slug)
     {
-        $product = Product::where('slug', $slug)->first();
-    
-        // Validasi apakah produk tersedia
-        if (!$product) {
-            return redirect('user/products/')->with('error', 'Product not found.');
-        }
-    
-        // Ambil cart yang sedang pending
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'variant_id' => 'required|exists:product_variants,id',
+            'color' => 'required|string',
+            'size' => 'required|string',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $variant = ProductVariant::with('product')->findOrFail($request->variant_id);
+
         $cart = Cart::firstOrCreate(
-            ['user_id' => Auth::user()->id, 'status' => 'pending'],
-            ['price' => 0]
+            ['user_id' => Auth::id(), 'status' => 'pending'],
+            ['total_price' => 0]
         );
-    
-        // Ambil item yang ada di keranjang
-        $cart_item = Cart_Item::where('product_id', $product->id)->where('cart_id', $cart->id)->first();
-    
-        // Hitung total kuantitas jika item sudah ada di keranjang
-        $current_quantity = $cart_item ? $cart_item->quantity : 0;
-        $new_total_quantity = $current_quantity + $request->quantity;
-    
-        // Validasi apakah melebihi stok
-        if ($new_total_quantity > $product->stock) {
+
+        $cartItem = CartItem::where('cart_id', $cart->id)
+            ->where('product_variant_id', $variant->id)
+            ->first();
+
+        $currentQuantity = $cartItem ? $cartItem->quantity : 0;
+        $newTotalQuantity = $currentQuantity + $request->quantity;
+
+        if ($newTotalQuantity > $variant->stock) {
             return redirect('user/products/')->with('error', 'The requested quantity exceeds available stock.');
         }
-    
-        // Tambahkan item ke keranjang atau perbarui item yang sudah ada
-        if ($cart_item) {
-            $cart_item->quantity = $new_total_quantity;
-            $cart_item->price = $new_total_quantity * $product->price;
-            $cart_item->save();
+
+        if ($cartItem) {
+            $cartItem->update([
+                'quantity' => $newTotalQuantity,
+                'price' => $variant->price, // tetap satuan
+            ]);
         } else {
-            Cart_Item::create([
+            CartItem::create([
                 'cart_id' => $cart->id,
-                'product_id' => $product->id,
-                'quantity' => $request->quantity,
-                'price' => $request->quantity * $product->price,
+                'product_variant_id' => $variant->id,
+                'product_name' => $variant->product->name,
+                'color' => $variant->color,
+                'size' => $variant->size,
+                'weight' => $variant->weight,
+                'price' => $variant->price,
+                'quantity' => $request->quantity
             ]);
         }
-    
-        // Perbarui total harga keranjang
-        $cart->price = Cart_Item::where('cart_id', $cart->id)->sum('price');
+
+        // Hitung ulang total harga
+        $cart->total_price = $cart->items->sum(fn($item) => $item->price * $item->quantity);
         $cart->save();
-    
+
         return redirect('user/products/')->with('success', 'Product added to cart successfully.');
     }
 
@@ -79,14 +84,15 @@ class UserProductController extends Controller
      */
     public function check_out()
     {
-        $cart = Cart::where('user_id', Auth::user()->id)->where('status', 'pending')->first();
-        $cart_items = [];
+        $cart = Cart::with('items.variant.product')
+            ->where('user_id', Auth::id())
+            ->where('status', 'pending')
+            ->first();
 
-        if (!empty($cart)) {
-            $cart_items = Cart_Item::where('cart_id', $cart->id)->get();
-        }
-
-        return view('user.cart.index', compact('cart', 'cart_items'));
+        return view('user.cart.index', [
+            'cart' => $cart,
+            'cartitems' => $cart ? $cart->items : []
+        ]);
     }
 
     /**
@@ -94,13 +100,14 @@ class UserProductController extends Controller
      */
     public function delete($id)
     {
-        $cart_item = Cart_Item::where('id', $id)->first();
+        $cartItem = CartItem::findOrFail($id);
+        $cart = $cartItem->cart;
 
-        $cart = Cart::where('id', $cart_item->cart_id)->first();
-        $cart->price = $cart->price - $cart_item->price; // Update harga total setelah item dihapus
-        $cart->update();
+        $cartItem->delete();
 
-        $cart_item->delete(); // Hapus item dari keranjang
+        // Hitung ulang total cart setelah item dihapus
+        $cart->total_price = $cart->items->sum(fn($item) => $item->price * $item->quantity);
+        $cart->save();
 
         return redirect('user/cart')->with('success', 'Item successfully removed from your cart.');
     }
@@ -110,9 +117,8 @@ class UserProductController extends Controller
      */
     public function confirm_check_out()
     {
-        $user = User::where('id', Auth::user()->id)->first();
+        $user = Auth::user();
 
-        // Cek apakah alamat dan nomor telepon sudah diisi
         if (empty($user->address)) {
             return redirect('user/profile')->with('info', 'Please update your address before checking out.');
         }
@@ -121,6 +127,6 @@ class UserProductController extends Controller
             return redirect('user/profile')->with('info', 'Please update your phone number before checking out.');
         }
 
-        return redirect('user/payment'); // Lanjut ke halaman pembayaran
+        return redirect('user/payment');
     }
 }

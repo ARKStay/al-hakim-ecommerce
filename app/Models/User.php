@@ -17,12 +17,22 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    // protected $fillable = [
-    //     'name',
-    //     'username',
-    //     'email',
-    //     'password',
-    // ];
+    protected $fillable = [
+        'name',
+        'username',
+        'email',
+        'phone',
+        'address',
+        'province_id',
+        'city_id',
+        'district_id',
+        'destination_id',
+        'province_name',
+        'city_name',
+        'district_name',
+        'password',
+        'account_status',
+    ];
 
     protected $guarded = ['id'];
 
@@ -50,7 +60,11 @@ class User extends Authenticatable
                     ->orWhere('username', 'like', '%' . $search . '%')
                     ->orWhere('email', 'like', '%' . $search . '%')
                     ->orWhere('phone', 'like', '%' . $search . '%')
-                    ->orWhere('address', 'like', '%' . $search . '%');
+                    ->orWhere('address', 'like', '%' . $search . '%')
+                    ->orWhere('province_name', 'like', '%' . $search . '%')
+                    ->orWhere('city_name', 'like', '%' . $search . '%')
+                    ->orWhere('district_name', 'like', '%' . $search . '%')
+                    ->orWhere('account_status', 'like', '%' . $search . '%');
             });
         });
     }

@@ -6,26 +6,35 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('order_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('order_id')->constrained()->onDelete('cascade');
-            $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->integer('quantity');
-            $table->integer('price');
+
+            $table->unsignedBigInteger('order_id'); // Foreign key ke orders (boleh pakai FK)
+            $table->unsignedBigInteger('product_id'); // Snapshot ID (tanpa FK)
+            $table->unsignedBigInteger('product_variant_id'); // Snapshot ID (tanpa FK)
+
+            // Snapshot data produk
+            $table->string('product_name');
             $table->string('color')->nullable();
-            $table->foreignId('sizes_id')->nullable()->constrained('sizes')->nullOnDelete();
+            $table->string('size')->nullable();
+            $table->string('variant_image')->nullable();
+
+            // Berat satuan (dalam kg, format desimal)
+            $table->decimal('weight', 8, 2)->default(0);
+
+            // Harga per item & jumlah
+            $table->integer('price');
+            $table->integer('quantity');
+
             $table->timestamps();
+
+            // Optional foreign key (kalau lo tetap pengen FK ke orders)
+            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('order_items');
