@@ -128,7 +128,7 @@
     {{-- Modal Give Review --}}
     <div id="orderReviewModal"
         class="fixed inset-0 bg-gray-900 bg-opacity-60 
-        items-center justify-center hidden z-50">
+            z-50 hidden items-center justify-center">
         <div class="bg-white rounded-xl w-11/12 md:w-3/4 lg:w-2/3 shadow-xl max-h-[85vh] overflow-y-auto relative p-6">
             <div class="flex justify-between items-center border-b pb-3 mb-4">
                 <h3 class="text-xl font-bold text-gray-800">Give Review</h3>
@@ -162,18 +162,18 @@
 
             content.innerHTML = `
         ${(order.items ?? []).map(item => `
-                            <div class="flex flex-col md:flex-row items-center border rounded-lg p-3 gap-4">
-                                <img src="${item.product?.image ? `${baseURL}/${item.product.image}` : 'https://via.placeholder.com/100'}"
-                                    alt="${item.product_name}" class="w-24 h-24 object-contain rounded-lg">
-                                <div class="flex-1 space-y-1">
-                                    <p class="font-semibold text-gray-800">${item.product_name}</p>
-                                    <p class="text-gray-600 text-sm">Color: ${item.color ?? '-'}</p>
-                                    <p class="text-gray-600 text-sm">Size: ${item.size ?? '-'}</p>
-                                    <p class="text-gray-600 text-sm">Quantity: ${item.quantity}</p>
-                                    <p class="font-semibold text-gray-800 text-sm">Price: ${formatCurrency(item.price)}</p>
-                                </div>
-                            </div>
-                        `).join('')}
+                                            <div class="flex flex-col md:flex-row items-center border rounded-lg p-3 gap-4">
+                                                <img src="${item.product?.image ? `${baseURL}/${item.product.image}` : 'https://via.placeholder.com/100'}"
+                                                    alt="${item.product_name}" class="w-24 h-24 object-contain rounded-lg">
+                                                <div class="flex-1 space-y-1">
+                                                    <p class="font-semibold text-gray-800">${item.product_name}</p>
+                                                    <p class="text-gray-600 text-sm">Color: ${item.color ?? '-'}</p>
+                                                    <p class="text-gray-600 text-sm">Size: ${item.size ?? '-'}</p>
+                                                    <p class="text-gray-600 text-sm">Quantity: ${item.quantity}</p>
+                                                    <p class="font-semibold text-gray-800 text-sm">Price: ${formatCurrency(item.price)}</p>
+                                                </div>
+                                            </div>
+                                        `).join('')}
         <div class="border-t pt-3 flex justify-between font-semibold text-gray-800">
             <span>Shipping Cost:</span>
             <span>${formatCurrency(order.shipping_cost)}</span>
@@ -199,29 +199,29 @@
                 <form action="/orders/${orderId}/review" method="POST" class="space-y-6">
                     <input type="hidden" name="_token" value="${csrfToken}">
                     ${(order.items ?? []).map(item => `
-                                            <div class="flex flex-col md:flex-row items-start border rounded-xl p-4 gap-4">
-                                                <img src="${item.product?.image ? `${baseURL}/${item.product.image}` : 'https://via.placeholder.com/100'}"
-                                                    alt="${item.product_name}" class="w-24 h-24 object-contain rounded-lg">
-                                                <div class="flex-1 space-y-2">
-                                                    <p class="font-semibold text-gray-800">${item.product_name}</p>
-                                                    <input type="hidden" name="ratings[${item.product.id}][product_id]" value="${item.product.id}">
-                                                    <div class="flex items-center gap-2">
-                                                        <label class="text-sm font-medium">Rating:</label>
-                                                        <select name="ratings[${item.product.id}][rating]" class="border rounded px-2 py-1 w-20">
-                                                            <option value="1">1</option>
-                                                            <option value="2">2</option>
-                                                            <option value="3">3</option>
-                                                            <option value="4">4</option>
-                                                            <option value="5">5</option>
-                                                        </select>
-                                                    </div>
-                                                    <div>
-                                                        <label class="block text-sm font-medium">Comment:</label>
-                                                        <textarea name="ratings[${item.product.id}][comment]" rows="3" class="border rounded-lg w-full px-2 py-1" placeholder="Write your comment..."></textarea>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        `).join('')}
+                                                            <div class="flex flex-col md:flex-row items-start border rounded-xl p-4 gap-4">
+                                                                <img src="${item.product?.image ? `${baseURL}/${item.product.image}` : 'https://via.placeholder.com/100'}"
+                                                                    alt="${item.product_name}" class="w-24 h-24 object-contain rounded-lg">
+                                                                <div class="flex-1 space-y-2">
+                                                                    <p class="font-semibold text-gray-800">${item.product_name}</p>
+                                                                    <input type="hidden" name="ratings[${item.product.id}][product_id]" value="${item.product.id}">
+                                                                    <div class="flex items-center gap-2">
+                                                                        <label class="text-sm font-medium">Rating:</label>
+                                                                        <select name="ratings[${item.product.id}][rating]" class="border rounded px-2 py-1 w-20">
+                                                                            <option value="1">1</option>
+                                                                            <option value="2">2</option>
+                                                                            <option value="3">3</option>
+                                                                            <option value="4">4</option>
+                                                                            <option value="5">5</option>
+                                                                        </select>
+                                                                    </div>
+                                                                    <div>
+                                                                        <label class="block text-sm font-medium">Comment:</label>
+                                                                        <textarea name="ratings[${item.product.id}][comment]" rows="3" class="border rounded-lg w-full px-2 py-1" placeholder="Write your comment..."></textarea>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        `).join('')}
                     <div class="flex justify-end">
                         <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-700 font-semibold">
                             Submit Review
@@ -232,10 +232,16 @@
             document.getElementById('orderReviewModal').classList.remove('hidden');
         }
 
+        function openReviewModal() {
+            const modal = document.getElementById('orderReviewModal');
+            modal.classList.remove('hidden'); // show
+            modal.classList.add('flex'); // biar flex layout
+        }
+
         function closeReviewModal() {
             const modal = document.getElementById('orderReviewModal');
-            modal.classList.remove('flex');
-            modal.classList.add('hidden');
+            modal.classList.remove('flex'); // hapus flex
+            modal.classList.add('hidden'); // hide
         }
     </script>
 </x-layouts.layout>

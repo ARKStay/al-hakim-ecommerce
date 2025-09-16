@@ -1,66 +1,109 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🛍️ Al-Hakim Store Web-Based Sales System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This project is a **web-based sales system** developed as part of an undergraduate thesis:
 
-## About Laravel
+> _"Development of Al-Hakim Store Sales System Based on Web with Midtrans Payment Gateway Integration and Customer Relationship Management (CRM) Approach"_  
+> by **Muhammad Daffa Al Hakim**.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🚀 Tech Stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+-   **Framework**: Laravel 11 (PHP)
+-   **Frontend**: Blade Template, Tailwind CSS, Alpine.js
+-   **Database**: MySQL
+-   **Local Development**: Laragon, phpMyAdmin
+-   **Payment Gateway**: Midtrans
+-   **Shipping API**: RajaOngkir (domestic)
+-   **CRM Integration**: Email & WhatsApp (via Fonnte API)
+-   **Additional Libraries**: SweetAlert, Trix Editor, dompdf
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 📌 Key Features
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 🔹 User
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+-   User registration, login, and profile management (edit, reset password).
+-   Product catalog with search, product details, variants (color/size), stock & rating.
+-   Shopping cart with automatic price calculation.
+-   Checkout with shipping cost integration (RajaOngkir).
+-   Online payment via Midtrans.
+-   Order tracking and transaction history.
+-   Product reviews and ratings.
+-   Receive promotions via email & WhatsApp.
 
-## Laravel Sponsors
+### 🔹 Admin
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+-   Dashboard with sales, orders, and users overview.
+-   CRUD Products & variants.
+-   Manage homepage hero section.
+-   Manage orders & update shipping status.
+-   User management.
+-   Manage product reviews & ratings.
+-   Sales reports (PDF).
+-   CRM: send promotions via email & WhatsApp.
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## 🗄️ Database Structure (Simplified)
 
-## Contributing
+-   `users` – user/admin accounts
+-   `products`, `product_variants` – products and variants
+-   `carts`, `cart_items` – shopping cart data
+-   `orders`, `order_items` – order transactions
+-   `ratings` – product reviews
+-   `promotions` – promotion campaigns
+-   `banners` – homepage hero section
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## ⚙️ Installation & Setup
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+1. Clone repository:
+    ```bash
+    git clone https://github.com/username/repository-name.git
+    cd repository-name
+    ```
+2. Install dependencies:
+   composer install
+   npm install
 
-## Security Vulnerabilities
+3. Configure environment:
+   cp .env.example .env
+   Edit .env file to configure database & API (Midtrans, RajaOngkir, Fonnte).
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+4. Generate application key:
+   php artisan key:generate
 
-## License
+5. Run migration & seeding:
+   php artisan migrate --seed
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+6. Run Tailwind (Vite) build:
+   npm run dev
+   (for production use npm run build instead)
+
+7. Start local server:
+   php artisan serve
+
+## 🧪 Testing
+
+-   Functional: All features work as expected.
+-   Non-Functional: System is stable and responsive.
+-   User Feedback (Likert Scale): Average satisfaction above 86% (Strongly Agree).
+
+## 📸 Screenshots
+
+-   Homepage
+    ![Homepage](public/screenshots/home.png)
+
+-   Product details
+    ![Admin Dashboard](public/screenshots/produk.png)
+    ![Cart & Checkout](public/screenshots/detail.png)
+
+-   Cart & checkout
+    ![Admin Dashboard](public/screenshots/cart.png)
+    ![Admin Dashboard](public/screenshots/checkout.png)
+
+-   Admin dashboard
+    ![Admin Dashboard](public/screenshots/dashboard.png)

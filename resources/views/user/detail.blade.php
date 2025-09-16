@@ -10,7 +10,7 @@
                         <span class="mx-2">/</span>
                     </li>
                     <li>
-                        <a href="/products" class="text-blue-500 hover:underline">Products</a>
+                        <a href="/user/products" class="text-blue-500 hover:underline">Products</a>
                         <span class="mx-2">/</span>
                     </li>
                     <li class="text-gray-700 dark:text-gray-300 truncate max-w-[400px]">{{ $product->name }}</li>
